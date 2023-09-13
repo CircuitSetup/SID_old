@@ -55,8 +55,9 @@ If that fails, the way to enter the Config Portal depends on whether the device 
 - If it is in access point mode (and your handheld/computer is connected to the WiFi network "SID-AP"), navigate your browser to http://192.168.4.1 
 - Otherwise type *90 followed by OK on the remote control; the IP address will be shown on the display.
 
+
 In the main menu, click on "Setup" to configure your SID.
-| ![The Config Portal](https://github.com/realA10001986/SID/assets/76924199/67a9164b-dfb4-4c36-a5d1-fa6b9d84ace9) |
+| ![The Config Portal](https://github.com/realA10001986/SID/assets/76924199/e620a93d-ac54-4d4b-9925-cd526ca9d540) |
 |:--:| 
 | *The Config Portal's Setup page* |
 
@@ -74,7 +75,8 @@ The main control device, however, is the IR remote control.
 
 Your SID might have an IR remote control included. This remote works out-of-the-box and needs no setup. 
 
-| ![Supplied IR remote control](https://github.com/realA10001986/SID/assets/76924199/e25884b9-24ad-4f50-bdd7-abffa06ef06e) |
+
+| ![Supplied IR remote control](https://github.com/realA10001986/SID/assets/76924199/9637b95b-d3ef-4a12-b72c-215f027e9514) |
 |:--:| 
 | *The default IR remote control* |
 
@@ -273,7 +275,7 @@ Note that a wired connection only allows for synchronized time travel sequences,
 
 The TCD can communicate with the SID wirelessly, via WiFi. It can send out information about a time travel and an alarm, and the SID queries the TCD for speed and some other data. Unlike with MQTT, no broker or other third party software is needed.
 
-![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/73437a96-af14-4237-9eaa-e40bf5f79a71)
+![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/60ddeb60-a998-4ad8-8b1c-5a715f850109)
 
 In order to connect your SID to the TCD using BTFFN, just enter the TCD's IP address in the *IP address of TCD* field in the SID's Config Portal. On the TCD, no special configuration is required.
 
@@ -291,7 +293,7 @@ The other way of wireless communication is, of course, [Home Assistant/MQTT](#ho
 
 If both TCD and SID are connected to the same broker, and the option *Send event notifications* is checked on the TCD's side, the SID will receive information on time travel and alarm and play their sequences in sync with the TCD. Unlike BTTFN, however, no other communication takes place.
 
-![MQTT connection](https://github.com/realA10001986/SID/assets/76924199/6231458e-576c-4ec9-9a30-4a792f842b17)
+![MQTT connection](https://github.com/realA10001986/SID/assets/76924199/f2838deb-c673-4bfb-9e09-88e26691742f)
 
 MQTT and BTTFN can co-exist. However, the TCD only sends out time travel and alarm notifications through either MQTT or BTTFN, never both. If you have other MQTT-aware devices listening to the TCD's public topic (bttf/tcd/pub) in order to react to time travel or alarm messages, use MQTT (ie check *Send event notifications*). If only BTTFN-aware devices are to be used, uncheck this option to use BTTFN as it has less latency.
 
