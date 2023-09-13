@@ -384,10 +384,6 @@ Clicking this (and saying "yes" in the confirmation dialog) erases the WiFi conf
 
 #### Basic settings
 
-#### Hardware configuration settings
-
-#### Basic settings
-
 ##### &#9654; Screen saver timer
 
 Enter the number of minutes until the Screen Saver should become active when the SID is idle.
