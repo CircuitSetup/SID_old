@@ -324,7 +324,7 @@ If your SID, along with a [Time Circuits Display](https://tcd.backtothefutu.re),
 
 #### TCD
 
-- Run your TCD in [*car mode*](https://github.com/realA10001986/Time-Circuits-Display/blob/main/README.md#car-mode);
+- Run your TCD in [*car mode*](https://tcd.backtothefutu.re/#car-mode);
 - disable WiFi power-saving on the TCD by setting **_WiFi power save timer for AP-mode_** to 0 (zero).
 
 #### SID
