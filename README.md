@@ -23,7 +23,7 @@ There are different alternative ways to install this firmware:
 
 2) Using the Arduino IDE or PlatformIO: Download the sketch source code, all required libraries, compile and upload it. This method is the one for fresh ESP32 boards and/or folks familiar with the programming tool chain. Detailed build information is in [sid-A10001986.ino](https://github.com/realA10001986/SID/blob/main/SID-A10001986/SID-A10001986.ino).
 
- *Important: After a firmware update, a "wait" symbol (egg timer) might be shown for up to a minute after reboot. Do NOT unplug the device during this time.*
+ *Important: After a firmware update, a "wait" symbol (hourglass) might be shown for up to a minute after reboot. Do NOT unplug the device during this time.*
 
 ## Short summary of first steps
 
@@ -55,8 +55,8 @@ If that fails, the way to enter the Config Portal depends on whether the device 
 - If it is in access point mode (and your handheld/computer is connected to the WiFi network "SID-AP"), navigate your browser to http://192.168.4.1 
 - Otherwise type *90 followed by OK on the remote control; the IP address will be shown on the display.
 
-
 In the main menu, click on "Setup" to configure your SID.
+
 | ![The Config Portal](https://github.com/realA10001986/SID/assets/76924199/e620a93d-ac54-4d4b-9925-cd526ca9d540) |
 |:--:| 
 | *The Config Portal's Setup page* |
@@ -65,7 +65,7 @@ A full reference of the Config Portal is [here](#appendix-a-the-config-portal).
 
 ## Basic Operation
 
-By default, it idles and shows an idle pattern. There are alternative idle patterns, selected by *0OK through *3OK on the remote, or via MQTT. If set through the IR remote and if an SD card is inserted, the setting will be persistent accross reboots.
+By default, it idles and shows an idle pattern. There are alternative idle patterns, selected by *0OK through *4OK on the remote, or via MQTT. If set through the IR remote and if an SD card is inserted, the setting will be persistent accross reboots.
 
 For the options to trigger a time travel, see [here](#time-travel).
 
@@ -75,20 +75,17 @@ The main control device, however, is the IR remote control.
 
 Your SID might have an IR remote control included. This remote works out-of-the-box and needs no setup. 
 
-
 | ![Supplied IR remote control](https://github.com/realA10001986/SID/assets/76924199/9637b95b-d3ef-4a12-b72c-215f027e9514) |
 |:--:| 
 | *The default IR remote control* |
 
-This remote is also sold as part of a kit for Arduino and is reasonably priced.
-
-Each time you press a (recognized) key on the remote, an optional IR feedback LED will briefly light up.
+Each time you press a (recognized) key on the remote, an IR feedback LED will briefly light up. This LED is located at the bottom of the board.
 
 ### IR learning
 
 You can have your SID learn the codes of another IR remote control. Most remotes with a carrier signal of 38kHz (which most IR remotes use) will work. However, some remote controls, expecially ones for TVs, send keys repeatedly and/or send different codes alternately. If you had the SID learn a remote and the keys are not (always) recognized afterwards or appear to the pressed repeatedly while held, that remote is of that type and cannot be used.
 
-First, go to the Config Portal, uncheck *TCD connected by wire* on the Setup page and save. The SID reboots. Afterwards, to start the learning process, hold the Time Travel button for a few seconds, until the displays shows "GO" followed by "0". Then press "0" on your remote, which the SID will visually acknowledge by displaysing the next key to press. Then press "1", wait for the acknowledgement, and so on. Enter your keys in the following order:
+First, go to the Config Portal, uncheck **_TCD connected by wire_** on the Setup page and save. The SID reboots. Afterwards, to start the learning process, hold the Time Travel button for a few seconds, until the displays shows "GO" followed by "0". Then press "0" on your remote, which the SID will visually acknowledge by displaying the next key to press. Then press "1", wait for the acknowledgement, and so on. Enter your keys in the following order:
 
 ```0 - 1 - 2 - 3 - 4 - 5 - 6 - 7 - 8 - 9 - * - # - Arrow up - Arrow down - Arrow left - Arrow right - OK``` 
 
@@ -102,7 +99,7 @@ To make the SID forget a learned IR remote control, type *654321 followed by OK.
 
 You can have your SID ignore IR commands by entering *71 followed by OK. After this sequence the SID will ignore all IR commands until *71OK is entered again. The purpose of this function is to enable you to use the same IR control for your SID and other props (such as Flux Capacitor).
 
-Note that the status of the IR lock is saved 10 seconds after its last change, and persistent accross reboots.
+Note that the status of the IR lock is saved 10 seconds after its last change, and is persistent accross reboots.
 
 ### IR remote reference
 
@@ -221,11 +218,11 @@ To travel through time, type "0" on the remote control. The SID will play its ti
 
 You can also connect a physical button to your SID; the button must shorten "TT" and "3.3V" on the "Time Travel" connector. Pressing this button briefly will trigger a time travel.
 
-Other ways of triggering a time travel are available if a [Time Circuits Display is connected](#connecting-a-time-circuits-display).
+Other ways of triggering a time travel are available if a [Time Circuits Display](#connecting-a-time-circuits-display) is connected.
 
 ## Spectrum Analyzer
 
-The spectrum analyzer works through a built-in microphone. Is shows ten frequency bands.
+The spectrum analyzer works through a built-in microphone. Is shows ten frequency bands. Sticky peaks are optional, they can be switched on/off in the Config Portal and by typing *50 followed by OK on the remote.
 
 ## Games
 
@@ -241,7 +238,7 @@ Snakes like apples (at least so I have heard). You control a snake that feels a 
 
 Preface note on SD cards: For unknown reasons, some SD cards simply do not work with this device. For instance, I had no luck with Sandisk Ultra 32GB and  "Intenso" cards. If your SD card is not recognized, check if it is formatted in FAT32 format (not exFAT!). Also, the size must not exceed 32GB (as larger cards cannot be formatted with FAT32). I am currently using Transcend SDHC 4GB cards and those work fine.
 
-The SD card is used for saving settings, in order to avoid flash wear on the SID's ESP32.
+The SD card is used for saving secondary settings, in order to avoid flash wear on the SID's ESP32.
 
 Note that the SD card must be inserted before powering up the device. It is not recognized if inserted while the SID is running. Furthermore, do not remove the SD card while the device is powered.
 
@@ -277,7 +274,7 @@ The TCD can communicate with the SID wirelessly, via WiFi. It can send out infor
 
 ![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/60ddeb60-a998-4ad8-8b1c-5a715f850109)
 
-In order to connect your SID to the TCD using BTFFN, just enter the TCD's IP address in the *IP address of TCD* field in the SID's Config Portal. On the TCD, no special configuration is required.
+In order to connect your SID to the TCD using BTFFN, just enter the TCD's IP address in the **_IP address of TCD_** field in the SID's Config Portal. On the TCD, no special configuration is required.
 
 Afterwards, the SID and the TCD can communicate wirelessly and 
 - play time travel sequences in sync,
@@ -291,11 +288,11 @@ You can use BTTF-Network and MQTT at the same time, see immediately below.
 
 The other way of wireless communication is, of course, [Home Assistant/MQTT](#home-assistant--mqtt).
 
-If both TCD and SID are connected to the same broker, and the option *Send event notifications* is checked on the TCD's side, the SID will receive information on time travel and alarm and play their sequences in sync with the TCD. Unlike BTTFN, however, no other communication takes place.
+If both TCD and SID are connected to the same broker, and the option **_Send event notifications_** is checked on the TCD's side, the SID will receive information on time travel and alarm and play their sequences in sync with the TCD. Unlike BTTFN, however, no other communication takes place.
 
 ![MQTT connection](https://github.com/realA10001986/SID/assets/76924199/f2838deb-c673-4bfb-9e09-88e26691742f)
 
-MQTT and BTTFN can co-exist. However, the TCD only sends out time travel and alarm notifications through either MQTT or BTTFN, never both. If you have other MQTT-aware devices listening to the TCD's public topic (bttf/tcd/pub) in order to react to time travel or alarm messages, use MQTT (ie check *Send event notifications*). If only BTTFN-aware devices are to be used, uncheck this option to use BTTFN as it has less latency.
+MQTT and BTTFN can co-exist. However, the TCD only sends out time travel and alarm notifications through either MQTT or BTTFN, never both. If you have other MQTT-aware devices listening to the TCD's public topic (bttf/tcd/pub) in order to react to time travel or alarm messages, use MQTT (ie check **_Send event notifications_**). If only BTTFN-aware devices are to be used, uncheck this option to use BTTFN as it has less latency.
 
 ## Home Assistant / MQTT
 
@@ -311,7 +308,7 @@ The SID can - to a some extent - be controlled through messages sent to topic **
 
 ### Receive commands from Time Circuits Display
 
-The TCD can trigger a time travel and tell the SID about an alarm by sending messages to topic **bttf/tcd/pub**. The SID receives these commands and reacts accordingly. Note that network traffic has some latency, so timing might not be as exact as a wired connection.
+The TCD can trigger a time travel and tell the SID about an alarm by sending messages to topic **bttf/tcd/pub**. The SID receives these commands and reacts accordingly.
 
 ### Setup
 
@@ -328,13 +325,13 @@ If your SID, along with a [Time Circuits Display](https://tcd.backtothefutu.re),
 #### TCD
 
 - Run your TCD in [*car mode*](https://github.com/realA10001986/Time-Circuits-Display/blob/main/README.md#car-mode);
-- disable WiFi power-saving on the TCD by setting *WiFi power save timer for AP-mode* to 0 (zero).
+- disable WiFi power-saving on the TCD by setting **_WiFi power save timer for AP-mode_** to 0 (zero).
 
 #### SID
 
 Enter the Config Portal on the SID (as described above), click on *Setup* and
-  - enter *192.168.4.1* into the field *IP address of TCD*
-  - check the option *Follow TCD fake power* if you have a fake power switch for the TCD (like eg a TFC switch)
+  - enter *192.168.4.1* into the field **_IP address of TCD_**
+  - check the option **_Follow TCD fake power_** if you have a fake power switch for the TCD (like eg a TFC switch)
   - click on *Save*.
 
 After the SID has restarted, re-enter the SID's Config Portal (while the TCD is powered and in *car mode*) and
@@ -350,7 +347,7 @@ In order to access the SID's Config Portal in your car, connect your hand held o
 
 Flash memory has a somewhat limited life-time. It can be written to only between 10.000 and 100.000 times before becoming unreliable. The firmware writes to the internal flash memory when saving settings and other data. Every time you change settings, data is written to flash memory.
 
-In order to reduce the number of write operations and thereby prolong the life of your SID, it is recommended to use a good-quality SD card and to check ["Save settings on SD"](#-save-settings-on-sd) in the Config Portal; some settings as well as learned IR codes are then stored on the SD card (which also suffers from wear but is easy to replace). If you want to swap the SD card but preserve your settings, go to the Config Portal while the old SD card is still in place, uncheck the *Save settings on SD* option, click on Save and wait until the device has rebooted. You can then power down, swap the SD card and power-up again. Then go to the Config Portal, change the option back on and click on Save. Your settings are now on the new SD card.
+In order to reduce the number of write operations and thereby prolong the life of your SID, it is recommended to use a good-quality SD card and to check **_["Save secondary settings on SD"](#-save-settings-on-sd)_** in the Config Portal; some settings as well as learned IR codes are then stored on the SD card (which also suffers from wear but is easy to replace). If you want to swap the SD card but preserve your settings, go to the Config Portal while the old SD card is still in place, uncheck the **_Save secondary settings on SD_** option, click on Save and wait until the device has rebooted. You can then power down, swap the SD card and power-up again. Then go to the Config Portal, change the option back on and click on Save. Your settings are now on the new SD card.
 
 ## Appendix A: The Config Portal
 
