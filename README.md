@@ -1,6 +1,6 @@
 # Firmware for Status Indicator Display (SID)
 
-This repository holds the most current firmware for CircuitSetup's magnificent SID.
+This repository holds the most current firmware for CircuitSetup's magnificent [SID](https://circuitsetup.us).
 
 The hardware is available [here](https://circuitsetup.us).
 
