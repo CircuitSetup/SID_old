@@ -73,7 +73,7 @@ The main control device, however, is the IR remote control.
 
 ### IR remote control
 
-Your SID might have an IR remote control included. This remote works out-of-the-box and needs no setup. 
+Your SID has an IR remote control included. This remote works out-of-the-box and needs no setup. 
 
 | ![Supplied IR remote control](https://github.com/realA10001986/SID/assets/76924199/9637b95b-d3ef-4a12-b72c-215f027e9514) |
 |:--:| 
