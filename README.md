@@ -320,7 +320,7 @@ If your broker does not allow anonymous logins, a username and password can be s
 
 Limitations: MQTT Protocol version 3.1.1; TLS/SSL not supported; ".local" domains (MDNS) not supported; server/broker must respond to PING (ICMP) echo requests. For proper operation with low latency, it is recommended that the broker is on your local network. 
 
-### Car setup
+## Car setup
 
 If your SID, along with a [Time Circuits Display](https://tcd.backtothefutu.re), is mounted in a car, the following network configuration is recommended:
 
