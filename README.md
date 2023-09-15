@@ -281,7 +281,7 @@ In order to connect your SID to the TCD using BTFFN, just enter the TCD's IP add
 Afterwards, the SID and the TCD can communicate wirelessly and 
 - play time travel sequences in sync,
 - both play an alarm-sequence when the TCD's alarm occurs,
-- the SID queries the TCD for GPS speed if desired to adapt chase speed to GPS speed,
+- the SID queries the TCD for GPS speed if desired to adapt its idle pattern to GPS speed,
 - the SID queries the TCD for fake power and night mode, in order to react accordingly if so configured.
 
 You can use BTTF-Network and MQTT at the same time, see immediately below.
