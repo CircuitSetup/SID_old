@@ -101,6 +101,8 @@ You can have your SID ignore IR commands by entering *71 followed by OK. After t
 
 Note that the status of the IR lock is saved 10 seconds after its last change, and is persistent accross reboots.
 
+In order to only disable the supplied IR remote control, check the option **_Disable supplied IR remote control_** in the [Config Portal](#-disable-supplied-ir-remote-control). In that case, any learned remote will still work.
+
 ### IR remote reference
 
 <table>
