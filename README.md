@@ -246,7 +246,7 @@ Note that the SD card must be inserted before powering up the device. It is not 
 
 ## Connecting a Time Circuits Display
 
-### Connecting TCD by wire
+### Connecting a TCD by wire
 
 Connect GND and GPIO on the SID's "Time Travel" connector to the TCD like in the table below:
 
