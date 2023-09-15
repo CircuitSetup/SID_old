@@ -398,7 +398,7 @@ This selects the boot-up setting for showing or not showing the peaks in the Spe
 
 ##### &#9654; Disable supplied IR remote control
 
-Check this to disable the supplied remote control; the FC will only accept commands from a learned IR remote (if applicable). 
+Check this to disable the supplied remote control; the SID will only accept commands from a learned IR remote (if applicable). 
 
 Note that this only disables the supplied remote, unlike [IR locking](#locking-ir-control), where IR commands from any known remote are ignored.
 
