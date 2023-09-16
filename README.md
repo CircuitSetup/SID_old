@@ -150,65 +150,65 @@ In order to only disable the supplied IR remote control, check the option **_Dis
     <tr>
      <td align="center" colspan="2">IR remote reference: Special sequences<br>(&#9166; = OK key)</td>
     </tr>
-  <tr>
-     <td align="left">*0&#9166;</td>
+    <tr>
      <td align="left">Default idle pattern</td>
+     <td align="left">*0&#9166;</td>
     </tr>
-   <tr>
-     <td align="left">*1&#9166;</td>
+    <tr>
      <td align="left">Idle pattern 1</td>
+     <td align="left">*1&#9166;</td>
     </tr>
-   <tr>
-     <td align="left">*2&#9166;</td>
+    <tr>
      <td align="left">Idle pattern 2</td>
+     <td align="left">*2&#9166;</td>
     </tr>
-  <tr>
-     <td align="left">*3&#9166;</td>
+    <tr>
      <td align="left">Idle pattern 3</td>
+     <td align="left">*3&#9166;</td>
     </tr>
      <tr>
-     <td align="left">*4&#9166;</td>
      <td align="left">Idle pattern 4</td>
+     <td align="left">*4&#9166;</td>
     </tr>
-   <tr>
-     <td align="left">*00&#9166;</td>
+    <tr>
      <td align="left">Idle mode</td>
+     <td align="left">*00&#9166;</td>
     </tr>
-   <tr>
-     <td align="left">*01&#9166;</td>
+    <tr>
      <td align="left">Start Spectrum Analyzer</td>
+     <td align="left">*01&#9166;</td>
     </tr>
-   <tr>
-     <td align="left">*02&#9166;</td>
+    <tr>
      <td align="left">Start Siddly game</td>
+     <td align="left">*02&#9166;</td>
     </tr>
     <tr>
-     <td align="left">*03&#9166;</td>
      <td align="left">Start Snake game</td>
+     <td align="left">*03&#9166;</td>
     </tr>
     <tr>
-     <td align="left">*50&#9166;</td>
      <td align="left">Enable/disable peaks in Spectrum Analyzer</td>
+     <td align="left">*50&#9166;</td>
     </tr>
     <tr>
-     <td align="left">*71&#9166;</td>
      <td align="left"><a href="#locking-ir-control">Disable/Enable</a> IR remote commands</td>
+     <td align="left">*71&#9166;</td>
     </tr>
-     <tr>
-     <td align="left">*90&#9166;</td>
+    <tr>
      <td align="left">Display current IP address</td>
+     <td align="left">*90&#9166;</td>
     </tr>
     <tr>
-     <td align="left">*64738&#9166;</td>
      <td align="left">Reboot the device</td>
+     <td align="left">*64738&#9166;</td>
     </tr>
     <tr>
-     <td align="left">*123456&#9166;</td>
      <td align="left">Delete static IP address<br>and WiFi-AP password</td>
+     <td align="left">*123456&#9166;</td>
     </tr>
-     <tr>
-     <td align="left">*654321&#9166;</td>
+    <tr>
      <td align="left">Delete learned IR remote control</td>
+     <td align="left">*654321&#9166;</td>
     </tr>
 </table>
 
