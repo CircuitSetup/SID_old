@@ -10,7 +10,7 @@ Features include
 - Spectrum Analyzer mode via microphone
 - [IR remote controlled](#ir-remote-control); can learn keys from custom remote
 - Advanced network-accessible [Config Portal](#the-config-portal) for setup with mDNS support for easy access (http://sid.local, hostname configurable)
-- Wireless communication with Time Circuits Display ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, alarm, chase speed, night mode, fake power
+- Wireless communication with Time Circuits Display ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, alarm, chase speed, night mode, fake power and remote control through TCD keypad
 - [Home Assistant](#home-assistant--mqtt) (MQTT 3.1.1) support
 - [*Siddly*](#siddly) and [*Snake*](#snake) games
 - [SD card](#sd-card) support
@@ -69,7 +69,7 @@ By default, it idles and shows an idle pattern. There are alternative idle patte
 
 For the options to trigger a time travel, see [here](#time-travel).
 
-The main control device, however, is the IR remote control.
+The main control device is the supplied IR remote control.  If a TCD is connected through [BTTF-Network](#bttf-network-bttfn), the FC can also be controlled through the TCD's keypad.
 
 ### IR remote control
 
@@ -148,67 +148,68 @@ In order to only disable the supplied IR remote control, check the option **_Dis
 
 <table>
     <tr>
-     <td align="center" colspan="2">IR remote reference: Special sequences<br>(&#9166; = OK key)</td>
+     <td align="center" colspan="3">IR/TCD remote reference: Special sequences<br>(&#9166; = OK key)</td>
     </tr>
+   <tr><td>Function</td><td>IR sequence</td><td>Code on TCD</td></tr>
     <tr>
      <td align="left">Default idle pattern</td>
-     <td align="left">*0&#9166;</td>
+     <td align="left">*10&#9166;</td><td>6010</td>
     </tr>
     <tr>
      <td align="left">Idle pattern 1</td>
-     <td align="left">*1&#9166;</td>
+     <td align="left">*11&#9166;</td><td>6011</td>
     </tr>
     <tr>
      <td align="left">Idle pattern 2</td>
-     <td align="left">*2&#9166;</td>
+     <td align="left">*12&#9166;</td><td>6012</td>
     </tr>
     <tr>
      <td align="left">Idle pattern 3</td>
-     <td align="left">*3&#9166;</td>
+     <td align="left">*13&#9166;</td><td>6013</td>
     </tr>
      <tr>
      <td align="left">Idle pattern 4</td>
-     <td align="left">*4&#9166;</td>
+     <td align="left">*14&#9166;</td><td>6014</td>
     </tr>
     <tr>
      <td align="left">Idle mode</td>
-     <td align="left">*00&#9166;</td>
+     <td align="left">*20&#9166;</td><td>6020</td>
     </tr>
     <tr>
      <td align="left">Start Spectrum Analyzer</td>
-     <td align="left">*01&#9166;</td>
+     <td align="left">*21&#9166;</td><td>6021</td>
     </tr>
     <tr>
      <td align="left">Start Siddly game</td>
-     <td align="left">*02&#9166;</td>
+     <td align="left">*22&#9166;</td><td>6022</td>
     </tr>
     <tr>
      <td align="left">Start Snake game</td>
-     <td align="left">*03&#9166;</td>
+     <td align="left">*23&#9166;</td><td>6023</td>
     </tr>
     <tr>
      <td align="left">Enable/disable peaks in Spectrum Analyzer</td>
-     <td align="left">*50&#9166;</td>
+     <td align="left">*50&#9166;</td><td>6050</td>
     </tr>
     <tr>
      <td align="left"><a href="#locking-ir-control">Disable/Enable</a> IR remote commands</td>
-     <td align="left">*71&#9166;</td>
+     <td align="left">*71&#9166;</td><td>6071</td>
     </tr>
     <tr>
      <td align="left">Display current IP address</td>
-     <td align="left">*90&#9166;</td>
+     <td align="left">*90&#9166;</td><td>6090</td>
     </tr>
     <tr>
      <td align="left">Reboot the device</td>
-     <td align="left">*64738&#9166;</td>
+     <td align="left">*64738&#9166;</td><td>n/a</td>
     </tr>
     <tr>
      <td align="left">Delete static IP address<br>and WiFi-AP password</td>
-     <td align="left">*123456&#9166;</td>
+     <td align="left">*123456&#9166;</td><td>n/a</td>
     </tr>
     <tr>
      <td align="left">Delete learned IR remote control</td>
-     <td align="left">*654321&#9166;</td>
+     <td align="left">*654321&#9166;</td><td>n/a</td>
     </tr>
 </table>
 
@@ -272,7 +273,7 @@ Note that a wired connection only allows for synchronized time travel sequences,
 
 ### BTTF-Network ("BTTFN")
 
-The TCD can communicate with the SID wirelessly, via WiFi. It can send out information about a time travel and an alarm, and the SID queries the TCD for speed and some other data. Unlike with MQTT, no broker or other third party software is needed.
+The TCD can communicate with the SID wirelessly, via WiFi. It can send out information about a time travel and an alarm, and the SID queries the TCD for speed and some other data. Furthermore, the TCD's keypad can be used to remote-control the SID. Unlike with MQTT, no broker or other third party software is needed.
 
 ![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/60ddeb60-a998-4ad8-8b1c-5a715f850109)
 
@@ -281,6 +282,7 @@ In order to connect your SID to the TCD using BTTFN, just enter the TCD's IP add
 Afterwards, the SID and the TCD can communicate wirelessly and 
 - play time travel sequences in sync,
 - both play an alarm-sequence when the TCD's alarm occurs,
+- the SID can be remote controlled through the TCD's keypad (command codes 6xxx),
 - the SID queries the TCD for GPS speed if desired to adapt its idle pattern to GPS speed,
 - the SID queries the TCD for fake power and night mode, in order to react accordingly if so configured.
 
@@ -341,7 +343,7 @@ After the SID has restarted, re-enter the SID's Config Portal (while the TCD is 
   - select the TCD's access point name in the list at the top or enter *TCD-AP* into the *SSID* field; if you password-protected your TCD's AP, enter this password in the *password* field. Leave all other fields empty,
   - click on *Save*.
 
-Using this setup enables the SID to receive notifications about time travel and alarm wirelessly, and to query the TCD for data.
+Using this setup enables the SID to receive notifications about time travel and alarm wirelessly, and to query the TCD for data. Also, the TCD keypad can be used to remote-control the SID.
 
 In order to access the SID's Config Portal in your car, connect your hand held or computer to the TCD's WiFi access point ("TCD-AP"), and direct your browser to http://sid.local ; if that does not work, go to the TCD's keypad menu, press ENTER until "BTTFN CLIENTS" is shown, hold ENTER, and look for the SID's IP address there; then direct your browser to that IP by using the URL http://a.b.c.d (a-d being the IP address displayed on the TCD display).
 
