@@ -5,7 +5,7 @@
  * https://github.com/realA10001986/SID
  * http://sid.backtothefutu.re
  *
- * Font
+ * Fonts
  *
  * -------------------------------------------------------------------
  * License: MIT
