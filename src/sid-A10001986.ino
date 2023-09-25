@@ -78,8 +78,12 @@
 
 /*  Changelog
  *  
+ *  2023/09/23 (A10001986)
+ *    - Add remote control facility through TCD keypad (requires BTTFN connection 
+ *      with TCD). Commands for SID are 6000-6999.
+ *    - Changed some command sequences
  *  2023/09/13 (A10001986)
- *    - Siddly: Add progess bar in red line
+ *    - Siddly: Add progress bar in red line
  *  2023/09/11 (A10001986)
  *    - Make SA peaks an option (CP and *50OK)
  *    - Guard SPIFFS/LittleFS calls with FS check

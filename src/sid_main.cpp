@@ -249,6 +249,10 @@ static const char    IRLearnKeys[] = "0123456789*#^$<>~";
 #define BTTFN_NOT_REENTRY  3
 #define BTTFN_NOT_ABORT_TT 4
 #define BTTFN_NOT_ALARM    5
+#define BTTFN_NOT_REFILL   6
+#define BTTFN_NOT_FLUX_CMD 7
+#define BTTFN_NOT_SID_CMD  8
+#define BTTFN_NOT_PCG_CMD  9
 #define BTTFN_TYPE_ANY     0    // Any, unknown or no device
 #define BTTFN_TYPE_FLUX    1    // Flux Capacitor
 #define BTTFN_TYPE_SID     2    // SID
@@ -266,13 +270,20 @@ static bool          BTTFNWiFiUp = false;
 static uint8_t       BTTFNfailCount = 0;
 static uint32_t      BTTFUDPID    = 0;
 static unsigned long lastBTTFNpacket = 0;
+static bool          BTTFNBootTO = false;
+
+static int      iCmdIdx = 0;
+static int      oCmdIdx = 0;
+static uint16_t commandQueue[16] = { 0 };
 
 // Forward declarations ------
 
 static void startIRLearn();
 static void endIRLearn(bool restore);
 static void handleIRinput();
-static void executeIRCmd(int command);
+static void handleIRKey(int command);
+static void handleRemoteCommand();
+static bool execute(bool isIR);
 static void startIRfeedback();
 static void endIRfeedback();
 
@@ -523,6 +534,7 @@ void main_loop()
         if(ir_remote.loop()) {
             handleIRinput();
         }
+        handleRemoteCommand();
     }
 
     // Spectrum analyzer / Siddly / Snake loops
@@ -898,11 +910,15 @@ void main_loop()
     now = millis();
 
     // If network is interrupted, return to stand-alone
-    if(lastBTTFNpacket && (now - lastBTTFNpacket > 30*1000)) {
-        tcdNM = false;
-        tcdFPO = false;
-        gpsSpeed = -1;
-        lastBTTFNpacket = 0;
+    if(useBTTFN) {
+        if( (lastBTTFNpacket && (now - lastBTTFNpacket > 30*1000)) ||
+            (!BTTFNBootTO && !lastBTTFNpacket && (now - powerupMillis > 60*1000)) ) {
+            tcdNM = false;
+            tcdFPO = false;
+            gpsSpeed = -1;
+            lastBTTFNpacket = 0;
+            BTTFNBootTO = true;
+        }
     }
 
     if(!TTrunning) {
@@ -1397,7 +1413,7 @@ static void handleIRinput()
                 #ifdef SID_DBG
                 Serial.printf("handleIRinput: key %d\n", i);
                 #endif
-                executeIRCmd(i);
+                handleIRKey(i);
                 done = true;
                 break;
             }
@@ -1426,7 +1442,37 @@ static uint8_t read2digs(uint8_t idx)
     return ((inputBuffer[idx] - '0') * 10) + (inputBuffer[idx+1] - '0');
 }
 
-static void executeIRCmd(int key)
+/*
+static void doKey1()
+{
+}
+static void doKey2()
+{
+}
+static void doKey3()
+{
+}
+static void doKey4()
+{
+}
+static void doKey5()
+{
+}
+static void doKey6()
+{
+}
+static void doKey7()
+{
+}
+static void doKey8()
+{
+}
+static void doKey9()
+{
+}
+*/
+
+static void handleIRKey(int key)
 {
     uint16_t temp;
     int16_t tempi;
@@ -1526,7 +1572,7 @@ static void executeIRCmd(int key)
         } else {
             inc_bri();
             brichanged = true;
-            brichgnow = millis();
+            brichgnow = now;
         }
         break;
     case 13:                          // arrow down: dec brightness  si/sn: move down
@@ -1540,7 +1586,7 @@ static void executeIRCmd(int key)
         } else {
             dec_bri();
             brichanged = true;
-            brichgnow = millis();
+            brichgnow = now;
         }
         break;
     case 14:                          // arrow left:                si/sn: move left
@@ -1564,137 +1610,7 @@ static void executeIRCmd(int key)
         }
         break;
     case 16:                          // ENTER: Execute code command
-        switch(strlen(inputBuffer)) {
-        case 1:
-            if(!irLocked) {
-                switch(inputBuffer[0] - '0') {
-                case 0:                               // *0 - *4 idle pattern
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                    idleMode = inputBuffer[0] - '0';
-                    ipachanged = true;
-                    ipachgnow = millis();
-                    break;
-                default:
-                    doBadInp = true;
-                }
-            }
-            break;
-        case 2:
-            temp = atoi(inputBuffer);
-            if(!TTrunning) {
-                switch(temp) {
-                case 0:
-                    if(!irLocked) {                   // *00 default mode: idle
-                        span_stop();
-                        siddly_stop();
-                        snake_stop();
-                    }
-                    break;
-                case 1:                               // *01 sa mode
-                    if(!irLocked) {
-                        siddly_stop();
-                        snake_stop();
-                        span_start();
-                    }
-                    break;
-                case 2:                               // *02 siddly
-                    if(!irLocked) {
-                        span_stop();
-                        snake_stop();
-                        siddly_start();
-                    }
-                    break;
-                case 3:                               // *03 snake
-                    if(!irLocked) {
-                        siddly_stop();
-                        span_stop();
-                        snake_start();
-                    }
-                    break;
-                case 50:                              // *50  enable/disable "peaks" in Spectrum Analyzer
-                    if(!irLocked) {
-                        doPeaks = !doPeaks;
-                    }
-                    break;
-                case 70:
-                    // Taken by FC IR lock sequence
-                    break;
-                case 71:                              // *71 lock/unlock ir
-                    irLocked = !irLocked;
-                    irlchanged = true;
-                    irlchgnow = millis();
-                    if(!irLocked) {
-                        startIRfeedback();
-                        irFeedBack = true;
-                        irFeedBackNow = now;
-                    }
-                    break;
-                case 90:                              // *90  display IP address
-                    if(!irLocked) {
-                        uint8_t a, b, c, d;
-                        char ipbuf[16];
-                        wifi_getIP(a, b, c, d);
-                        sprintf(ipbuf, "%d.%d.%d.%d", a, b, c, d);
-                        span_stop();
-                        siddly_stop();
-                        snake_stop();
-                        showWordSequence(ipbuf, 5);
-                        ir_remote.loop(); // Flush IR afterwards
-                    }
-                    break;
-                default:
-                    if(!irLocked) {
-                        doBadInp = true;
-                    }
-                }
-            }
-            break;
-        case 3:
-            if(!irLocked) {
-                temp = atoi(inputBuffer);
-                if(!TTrunning) {
-                    doBadInp = true;
-                }
-            }
-            break;
-        case 5:
-            if(!irLocked) {
-                if(!strcmp(inputBuffer, "64738")) {
-                    // all off
-                    endIRfeedback();
-                    delay(50);
-                    esp_restart();
-                }
-                doBadInp = true;
-            }
-            break;
-        case 6:
-            if(!irLocked) {
-                if(!TTrunning) {
-                    if(!strcmp(inputBuffer, "123456")) {
-                        deleteIpSettings();               // *123456OK deletes IP settings
-                        settings.appw[0] = 0;             // and clears AP mode WiFi password
-                        write_settings();
-                    } else if(!strcmp(inputBuffer, "654321")) {
-                        deleteIRKeys();                   // *654321OK deletes learned IR remote
-                        for(int i = 0; i < NUM_IR_KEYS; i++) {
-                            remote_codes[i][1] = 0;
-                        }
-                    } else {
-                        doBadInp = true;
-                    }
-                }
-            }
-            break;
-        default:
-            if(!irLocked) {
-                doBadInp = true;
-            }
-        }
-        clearInpBuf();
+        doBadInp = execute(true);
         break;
     default:
         if(!irLocked) {
@@ -1706,6 +1622,240 @@ static void executeIRCmd(int key)
         // bad input signal
         // TODO
     }
+}
+
+static void handleRemoteCommand()
+{
+    uint16_t command = commandQueue[oCmdIdx];
+
+    if(!command)
+        return;
+
+    oCmdIdx++;
+    oCmdIdx &= 0x0f;
+
+    if(command > 999)
+        return;
+
+    if(ssActive) {
+        ssEnd();
+    }
+    ssRestartTimer();
+    lastKeyPressed = millis();
+
+    // Some translation
+    if(command < 10) {
+      
+        // <10 are translated to direct-key-actions.
+        // Right now, there are no direct-key actions suitable 
+        // for BTTFN remote control.
+        /*
+        switch(command) {
+        case 1:
+            doKey1();
+            break;
+        case 2:
+            doKey2();
+            break;
+        case 3:
+            doKey3();
+            break;
+        case 4:
+            doKey4();
+            break;
+        case 5:
+            doKey5();
+            break;
+        case 6:
+            doKey6();
+            break;
+        case 7:
+            doKey7();
+            break;
+        case 8:
+            doKey8();
+            break;
+        case 9:
+            doKey9();
+            break;
+        }
+        */
+
+        return;
+        
+    } else if(command < 100) {
+      
+        sprintf(inputBuffer, "%02d", command);
+        
+    } else {
+      
+        sprintf(inputBuffer, "%03d", command);
+        
+    }
+
+    execute(false);
+}
+
+static bool execute(bool isIR)
+{
+    bool doBadInp = false;
+    bool isIRLocked = isIR ? irLocked : false;
+    uint16_t temp;
+    unsigned long now = millis();
+
+    switch(strlen(inputBuffer)) {
+    case 1:
+        if(!isIRLocked) {
+            switch(inputBuffer[0] - '0') {
+            case 0:                               // *0 - *4 idle pattern (deprecated)
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                temp = idleMode;
+                idleMode = inputBuffer[0] - '0';
+                if((temp != idleMode) && (idleMode == 4)) {
+                    LMState = LMIdx = 0;
+                }
+                ipachanged = true;
+                ipachgnow = now;
+                break;
+            default:
+                doBadInp = true;
+            }
+        }
+        break;
+    case 2:
+        temp = atoi(inputBuffer);
+        if(temp >= 10 && temp <= 19) {            // *10-*14 idle pattern
+            if(!isIRLocked) {
+                if(temp <= 14) {
+                    temp = idleMode;
+                    idleMode = atoi(inputBuffer) - 10;
+                    if((temp != idleMode) && (idleMode == 4)) {
+                        LMState = LMIdx = 0;
+                    }
+                    ipachanged = true;
+                    ipachgnow = now;
+                } else {
+                    doBadInp = true;
+                }
+            }
+        } else {
+            switch(temp) {
+            case 0:
+            case 20:
+                if(!TTrunning && !isIRLocked) {   // *00, *20 idle mode
+                    span_stop();
+                    siddly_stop();
+                    snake_stop();
+                }
+                break;
+            case 1:                               // *01, *21 sa mode
+            case 21:
+                if(!TTrunning && !isIRLocked) {
+                    siddly_stop();
+                    snake_stop();
+                    span_start();
+                }
+                break;
+            case 2:                               // *02, *22 siddly
+            case 22:
+                if(!TTrunning && !isIRLocked) {
+                    span_stop();
+                    snake_stop();
+                    siddly_start();
+                }
+                break;
+            case 3:                               // *03, *23 snake
+            case 23:
+                if(!TTrunning && !isIRLocked) {
+                    siddly_stop();
+                    span_stop();
+                    snake_start();
+                }
+                break;
+            case 50:                              // *50  enable/disable "peaks" in Spectrum Analyzer
+                if(!TTrunning && !isIRLocked) {
+                    doPeaks = !doPeaks;
+                }
+                break;
+            case 70:
+                // Taken by FC IR lock sequence
+                break;
+            case 71:                              // *71 lock/unlock ir
+                irLocked = !irLocked;
+                irlchanged = true;
+                irlchgnow = millis();
+                if(!TTrunning && !irLocked) {
+                    startIRfeedback();
+                    irFeedBack = true;
+                    irFeedBackNow = now;
+                }
+                break;
+            case 90:                              // *90  display IP address
+                if(!TTrunning && !isIRLocked) {
+                    uint8_t a, b, c, d;
+                    char ipbuf[16];
+                    wifi_getIP(a, b, c, d);
+                    sprintf(ipbuf, "%d.%d.%d.%d", a, b, c, d);
+                    span_stop();
+                    siddly_stop();
+                    snake_stop();
+                    showWordSequence(ipbuf, 5);
+                    ir_remote.loop(); // Flush IR afterwards
+                }
+                break;
+            default:
+                if(!isIRLocked) {
+                    doBadInp = true;
+                }
+            }
+        }
+        break;
+    case 3:
+        if(!isIRLocked) {
+            //temp = atoi(inputBuffer);
+            doBadInp = true;
+        }
+        break;
+    case 5:
+        if(!isIRLocked) {
+            if(!strcmp(inputBuffer, "64738")) {
+                sid.clearDisplayDirect();
+                endIRfeedback();
+                delay(50);
+                esp_restart();
+            }
+            doBadInp = true;
+        }
+        break;
+    case 6:
+        if(!isIRLocked) {
+            if(!TTrunning) {
+                if(!strcmp(inputBuffer, "123456")) {
+                    deleteIpSettings();               // *123456OK deletes IP settings
+                    settings.appw[0] = 0;             // and clears AP mode WiFi password
+                    write_settings();
+                } else if(!strcmp(inputBuffer, "654321")) {
+                    deleteIRKeys();                   // *654321OK deletes learned IR remote
+                    for(int i = 0; i < NUM_IR_KEYS; i++) {
+                        remote_codes[i][1] = 0;
+                    }
+                } else {
+                    doBadInp = true;
+                }
+            }
+        }
+        break;
+    default:
+        if(!isIRLocked) {
+            doBadInp = true;
+        }
+    }
+    clearInpBuf();
+
+    return doBadInp;
 }
 
 /*
@@ -1957,6 +2107,15 @@ void mydelay(unsigned long mydel, bool withIR)
  * BTTF network communication
  */
 
+static void addCmdQueue(uint16_t command)
+{
+    if(!command) return;
+
+    commandQueue[iCmdIdx] = command;
+    iCmdIdx++;
+    iCmdIdx &= 0x0f;
+}
+
 static void bttfn_setup()
 {
     useBTTFN = false;
@@ -2066,6 +2225,9 @@ static void BTTFNCheckPacket()
             networkAlarm = true;
             // Eval this at our convenience
             break;
+        case BTTFN_NOT_SID_CMD:
+            addCmdQueue(BTTFUDPBuf[6] | (BTTFUDPBuf[7] << 8));
+            break;  
         }
       
     } else {

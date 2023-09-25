@@ -193,12 +193,13 @@ void sa_loop()
         return;      
 
     // Calculate loop delay correctional value to keep the pace
-    lastTime = now;
     lastCorr = now - lastTime;
     if(lastCorr < (NUMSAMPLES * 1000 / SAMPLERATE))
         lastCorr = 0;
     else 
         lastCorr -= (NUMSAMPLES * 1000 / SAMPLERATE);
+
+    lastTime = now;
 
     // Read i2c data  - do I need a timeout? FIXME
     i2s_read(I2S_PORT, (void *)rawSamples, sizeof(rawSamples), &bytesRead, portMAX_DELAY);
