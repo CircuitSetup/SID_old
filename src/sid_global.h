@@ -15,7 +15,7 @@
 #define SID_VERSION       "V0.40"
 #define SID_VERSION_EXTRA "SEP232023"
 
-#define SID_DBG              // debug output on Serial
+//#define SID_DBG              // debug output on Serial
 
 /*************************************************************************
  ***                     mDNS (Bonjour) support                        ***
