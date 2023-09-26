@@ -284,8 +284,6 @@ static bool read_settings(File configFile)
         
         wd |= CopyCheckValidNumParm(json["disDIR"], settings.disDIR, sizeof(settings.disDIR), 0, 1, DEF_DISDIR);
 
-        wd |= CopyCheckValidNumParm(json["TCDpresent"], settings.TCDpresent, sizeof(settings.TCDpresent), 0, 1, DEF_TCD_PRES);
-
         if(json["hostName"]) {
             memset(settings.hostName, 0, sizeof(settings.hostName));
             strncpy(settings.hostName, json["hostName"], sizeof(settings.hostName) - 1);
@@ -302,6 +300,9 @@ static bool read_settings(File configFile)
         
         wd |= CopyCheckValidNumParm(json["wifiConRetries"], settings.wifiConRetries, sizeof(settings.wifiConRetries), 1, 10, DEF_WIFI_RETRY);
         wd |= CopyCheckValidNumParm(json["wifiConTimeout"], settings.wifiConTimeout, sizeof(settings.wifiConTimeout), 7, 25, DEF_WIFI_TIMEOUT);
+
+        wd |= CopyCheckValidNumParm(json["TCDpresent"], settings.TCDpresent, sizeof(settings.TCDpresent), 0, 1, DEF_TCD_PRES);
+        wd |= CopyCheckValidNumParm(json["noETTOLead"], settings.noETTOLead, sizeof(settings.noETTOLead), 0, 1, DEF_NO_ETTO_LEAD);
 
         if(json["tcdIP"]) {
             memset(settings.tcdIP, 0, sizeof(settings.tcdIP));
@@ -359,6 +360,7 @@ void write_settings()
     json["disDIR"] = settings.disDIR;
 
     json["TCDpresent"] = settings.TCDpresent;
+    json["noETTOLead"] = settings.noETTOLead;
     
     json["hostName"] = settings.hostName;
     json["systemID"] = settings.systemID;

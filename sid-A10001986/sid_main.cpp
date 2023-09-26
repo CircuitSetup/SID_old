@@ -175,7 +175,8 @@ static const int TTampFacts[TT_AMP_STEPS] = {
 #define P1_DUR          5000    // time tunnel phase
 #define P2_DUR          3000    // re-entry phase
 
-bool TCDconnected = false;
+bool         TCDconnected = false;
+static bool  noETTOLead = false;
 
 static bool          brichanged = false;
 static unsigned long brichgnow = 0;
@@ -355,6 +356,7 @@ void main_setup()
     // Determine if Time Circuits Display is connected
     // via wire, and is source of GPIO tt trigger
     TCDconnected = (atoi(settings.TCDpresent) > 0);
+    noETTOLead = (atoi(settings.noETTOLead) > 0);
 
     // Init IR feedback LED
     pinMode(IRFeedBackPin, OUTPUT);
@@ -545,12 +547,12 @@ void main_loop()
     }
 
     // TT button evaluation
-    if(FPBUnitIsOn) {
+    if(FPBUnitIsOn && !TTrunning) {
         ttkeyScan();
         if(isTTKeyHeld) {
             ssEnd();
             isTTKeyHeld = isTTKeyPressed = false;
-            if(!TTrunning && !IRLearning) {
+            if(!IRLearning) {
                 span_stop();
                 siddly_stop();
                 snake_stop();
@@ -573,7 +575,7 @@ void main_loop()
                 if(TCDconnected) {
                     ssEnd();
                 }
-                timeTravel(TCDconnected, ETTO_LEAD);
+                timeTravel(TCDconnected, noETTOLead ? 0 : ETTO_LEAD);
             }
         }
     
@@ -722,7 +724,7 @@ void main_loop()
                 } else {
                     TTP2 = false;
                     TTrunning = false;
-                    isTTKeyPressed = false;
+                    isTTKeyHeld = isTTKeyPressed = false;
                     ssRestartTimer();
                     sa_setAmpFact(100);
                     LMState = LMIdx = 0;
@@ -854,7 +856,7 @@ void main_loop()
                 } else {
                     TTP2 = false;
                     TTrunning = false;
-                    isTTKeyPressed = false;
+                    isTTKeyHeld = isTTKeyPressed = false;
                     ssRestartTimer();
                     sa_setAmpFact(100);
                     LMState = LMIdx = 0;
@@ -866,7 +868,7 @@ void main_loop()
 
     } else if(!siActive && !snActive && !saActive) {    // No TT currently
 
-        if(!IRLearning && networkAlarm) {
+        if(networkAlarm && !IRLearning) {
 
             networkAlarm = false;
             // play alarm sequence
@@ -1956,6 +1958,11 @@ void endWaitSequence()
     LMState = LMIdx = 0;
 }
 
+void allOff()
+{
+    sid.clearDisplayDirect();
+}
+
 static void fadeOut()
 {
     int a = sid.getBrightness();
@@ -2025,7 +2032,6 @@ static void ttkeyScan()
 static void TTKeyPressed()
 {
     isTTKeyPressed = true;
-    Serial.println("TT button pressed");
 }
 
 static void TTKeyHeld()

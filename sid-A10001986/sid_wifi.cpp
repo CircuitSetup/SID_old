@@ -73,7 +73,6 @@ WiFiManagerParameter custom_SApeaks("sap", "Show peaks in Spectrum Analyzer (0=o
 WiFiManagerParameter custom_SApeaks("sap", "Show peaks in Spectrum Analyzer", settings.SApeaks, 1, "type='checkbox'", WFM_LABEL_AFTER);
 #endif // -------------------------------------------------
 
-
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
 WiFiManagerParameter custom_disDIR("dDIR", "Disable supplied IR control (0=off, 1=on)", settings.disDIR, 1, "autocomplete='off' title='Set to 1 to disable the supplied IR remote control'");
 #else // -------------------- Checkbox hack: --------------
@@ -95,6 +94,11 @@ WiFiManagerParameter custom_wifiConTimeout("wificon", "WiFi connection timeout (
 WiFiManagerParameter custom_TCDpresent("TCDpres", "TCD connected by wire (0=no, 1=yes)", settings.TCDpresent, 1, "autocomplete='off' title='Enable if you have a Time Circuits Display connected via wire'");
 #else // -------------------- Checkbox hack: --------------
 WiFiManagerParameter custom_TCDpresent("TCDpres", "TCD connected by wire", settings.TCDpresent, 1, "autocomplete='off' title='Check if you have a Time Circuits Display connected via wire' type='checkbox'", WFM_LABEL_AFTER);
+#endif // -------------------------------------------------
+#ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
+WiFiManagerParameter custom_noETTOL("uEtNL", "TCD signals Time Travel without 5s lead (0=no, 1=yes)", settings.noETTOLead, 1, "autocomplete='off'");
+#else // -------------------- Checkbox hack: --------------
+WiFiManagerParameter custom_noETTOL("uEtNL", "TCD signals Time Travel without 5s lead", settings.noETTOLead, 1, "autocomplete='off' type='checkbox' class='mt5' style='margin-left:20px'", WFM_LABEL_AFTER);
 #endif // -------------------------------------------------
 
 WiFiManagerParameter custom_bttfnHint("<div style='margin:0px 0px 10px 0px;padding:0px'>Wireless communication (BTTF-Network)</div>");
@@ -293,8 +297,9 @@ void wifi_setup()
     wm.addParameter(&custom_wifiConRetries);
     wm.addParameter(&custom_wifiConTimeout); 
 
-    wm.addParameter(&custom_sectstart);     // 2
+    wm.addParameter(&custom_sectstart);     // 3
     wm.addParameter(&custom_TCDpresent);
+    wm.addParameter(&custom_noETTOL);
 
     wm.addParameter(&custom_sectstart);     // 7 (8)
     wm.addParameter(&custom_bttfnHint);
@@ -550,6 +555,7 @@ void wifi_loop()
             mystrcpy(settings.disDIR, &custom_disDIR);
 
             mystrcpy(settings.TCDpresent, &custom_TCDpresent);
+            mystrcpy(settings.noETTOLead, &custom_noETTOL);
 
             //mystrcpy(settings.wait4TCD, &custom_wait4TCD);
             mystrcpy(settings.useGPSS, &custom_uGPS);
@@ -572,6 +578,7 @@ void wifi_loop()
             strcpyCB(settings.disDIR, &custom_disDIR);
 
             strcpyCB(settings.TCDpresent, &custom_TCDpresent);
+            strcpyCB(settings.noETTOLead, &custom_noETTOL);
 
             //strcpyCB(settings.wait4TCD, &custom_wait4TCD);
             strcpyCB(settings.useGPSS, &custom_uGPS);
@@ -606,6 +613,8 @@ void wifi_loop()
         shouldSaveConfig = 0;
 
         // Reset esp32 to load new settings
+
+        allOff();
 
         #ifdef SID_DBG
         Serial.println(F("Config Portal: Restarting ESP...."));
@@ -966,6 +975,7 @@ void updateConfigPortalValues()
     custom_disDIR.setValue(settings.disDIR, 1);
 
     custom_TCDpresent.setValue(settings.TCDpresent, 1);
+    custom_noETTOL.setValue(settings.noETTOLead, 1);
 
     //custom_wait4TCD.setValue(settings.wait4TCD, 1);
     custom_uGPS.setValue(settings.useGPSS, 1);
@@ -987,6 +997,7 @@ void updateConfigPortalValues()
     setCBVal(&custom_disDIR, settings.disDIR);
 
     setCBVal(&custom_TCDpresent, settings.TCDpresent);
+    setCBVal(&custom_noETTOL, settings.noETTOLead);
 
     //setCBVal(&custom_wait4TCD, settings.wait4TCD);
     setCBVal(&custom_uGPS, settings.useGPSS);
