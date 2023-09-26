@@ -66,6 +66,7 @@ void main_loop();
 
 void showWaitSequence();
 void endWaitSequence();
+void allOff();
 
 void populateIRarray(uint32_t *irkeys, int index);
 void copyIRarray(uint32_t *irkeys, int index);
