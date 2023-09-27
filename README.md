@@ -275,7 +275,7 @@ Note that a wired connection only allows for synchronized time travel sequences,
 
 ### BTTF-Network ("BTTFN")
 
-The TCD can communicate with the SID wirelessly, via WiFi. It can send out information about a time travel and an alarm, and the SID queries the TCD for speed and some other data. Furthermore, the TCD's keypad can be used to remote-control the SID. Unlike with MQTT, no broker or other third party software is needed.
+The TCD can communicate with the SID wirelessly, via WiFi. It can send out information about a time travel and an alarm, and the SID queries the TCD for speed and some other data. Furthermore, the TCD's keypad can be used to remote-control the SID.
 
 ![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/60ddeb60-a998-4ad8-8b1c-5a715f850109)
 
@@ -289,16 +289,6 @@ Afterwards, the SID and the TCD can communicate wirelessly and
 - the SID queries the TCD for fake power and night mode, in order to react accordingly if so configured.
 
 You can use BTTF-Network and MQTT at the same time, see immediately below.
-
-### Home Assistant/MQTT
-
-The other way of wireless communication is, of course, [Home Assistant/MQTT](#home-assistant--mqtt).
-
-If both TCD and SID are connected to the same broker, and the option **_Send event notifications_** is checked on the TCD's side, the SID will receive information on time travel and alarm and play their sequences in sync with the TCD. Unlike BTTFN, however, no other communication takes place.
-
-![MQTT connection](https://github.com/realA10001986/SID/assets/76924199/f2838deb-c673-4bfb-9e09-88e26691742f)
-
-MQTT and BTTFN can co-exist. However, the TCD only sends out time travel and alarm notifications through either MQTT or BTTFN, never both. If you have other MQTT-aware devices listening to the TCD's public topic (bttf/tcd/pub) in order to react to time travel or alarm messages, use MQTT (ie check **_Send event notifications_**). If only BTTFN-aware devices are to be used, uncheck this option to use BTTFN as it has less latency.
 
 ## Home Assistant / MQTT
 
@@ -314,7 +304,11 @@ The SID can - to a some extent - be controlled through messages sent to topic **
 
 ### Receive commands from Time Circuits Display
 
-The TCD can trigger a time travel and tell the SID about an alarm by sending messages to topic **bttf/tcd/pub**. The SID receives these commands and reacts accordingly.
+If both TCD and SID are connected to the same broker, and the option **_Send event notifications_** is checked on the TCD's side, the SID will receive information on time travel and alarm and play their sequences in sync with the TCD. Unlike BTTFN, however, no other communication takes place.
+
+![MQTT connection](https://github.com/realA10001986/SID/assets/76924199/f2838deb-c673-4bfb-9e09-88e26691742f)
+
+MQTT and BTTFN can co-exist. However, the TCD only sends out time travel and alarm notifications through either MQTT or BTTFN, never both. If you have other MQTT-aware devices listening to the TCD's public topic (bttf/tcd/pub) in order to react to time travel or alarm messages, use MQTT (ie check **_Send event notifications_**). If only BTTFN-aware devices are to be used, uncheck this option to use BTTFN as it has less latency.
 
 ### Setup
 
