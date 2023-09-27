@@ -103,11 +103,11 @@ Note that the status of the IR lock is saved 10 seconds after its last change, a
 
 In order to only disable the supplied IR remote control, check the option **_Disable supplied IR remote control_** in the [Config Portal](#-disable-supplied-ir-remote-control). In that case, any learned remote will still work.
 
-### IR remote reference
+### Remote control reference
 
 <table>
     <tr>
-     <td align="center" colspan="3">IR remote reference: Single key actions</td>
+     <td align="center" colspan="3">Single key actions</td>
     </tr>
     <tr>
      <td align="center">1<br>Games: Quit</td>
@@ -148,9 +148,9 @@ In order to only disable the supplied IR remote control, check the option **_Dis
 
 <table>
     <tr>
-     <td align="center" colspan="3">IR/TCD remote reference: Special sequences<br>(&#9166; = OK key)</td>
+     <td align="center" colspan="3">Special sequences<br>(&#9166; = OK key)</td>
     </tr>
-   <tr><td>Function</td><td>IR sequence</td><td>Code on TCD</td></tr>
+   <tr><td>Function</td><td>Code on IR</td><td>Code on TCD</td></tr>
     <tr>
      <td align="left">Default idle pattern</td>
      <td align="left">*10&#9166;</td><td>6010</td>
@@ -269,11 +269,13 @@ Connect GND and GPIO on the SID's "Time Travel" connector to the TCD like in the
     </tr>
 </table>
 
-Note that a wired connection only allows for synchronized time travel sequences, no other communication takes place.
+Next, head to the Config Portal and set the ooption **_TCD connected by wire_**. On the TCD, the option "Control props connected by wire" must be set.
+
+Note that a wired connection only allows for synchronized time travel sequences, no other communication takes place. Therefore I strongly recommend a wireless BTTFN connection, see immediately below.
 
 ### BTTF-Network ("BTTFN")
 
-The TCD can communicate with the SID wirelessly, via WiFi. It can send out information about a time travel and an alarm, and the SID queries the TCD for speed and some other data. Furthermore, the TCD's keypad can be used to remote-control the SID. Unlike with MQTT, no broker or other third party software is needed.
+The TCD can communicate with the SID wirelessly, via WiFi. It can send out information about a time travel and an alarm, and the SID queries the TCD for speed and some other data. Furthermore, the TCD's keypad can be used to remote-control the SID.
 
 ![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/60ddeb60-a998-4ad8-8b1c-5a715f850109)
 
@@ -287,16 +289,6 @@ Afterwards, the SID and the TCD can communicate wirelessly and
 - the SID queries the TCD for fake power and night mode, in order to react accordingly if so configured.
 
 You can use BTTF-Network and MQTT at the same time, see immediately below.
-
-### Home Assistant/MQTT
-
-The other way of wireless communication is, of course, [Home Assistant/MQTT](#home-assistant--mqtt).
-
-If both TCD and SID are connected to the same broker, and the option **_Send event notifications_** is checked on the TCD's side, the SID will receive information on time travel and alarm and play their sequences in sync with the TCD. Unlike BTTFN, however, no other communication takes place.
-
-![MQTT connection](https://github.com/realA10001986/SID/assets/76924199/f2838deb-c673-4bfb-9e09-88e26691742f)
-
-MQTT and BTTFN can co-exist. However, the TCD only sends out time travel and alarm notifications through either MQTT or BTTFN, never both. If you have other MQTT-aware devices listening to the TCD's public topic (bttf/tcd/pub) in order to react to time travel or alarm messages, use MQTT (ie check **_Send event notifications_**). If only BTTFN-aware devices are to be used, uncheck this option to use BTTFN as it has less latency.
 
 ## Home Assistant / MQTT
 
@@ -312,7 +304,11 @@ The SID can - to a some extent - be controlled through messages sent to topic **
 
 ### Receive commands from Time Circuits Display
 
-The TCD can trigger a time travel and tell the SID about an alarm by sending messages to topic **bttf/tcd/pub**. The SID receives these commands and reacts accordingly.
+If both TCD and SID are connected to the same broker, and the option **_Send event notifications_** is checked on the TCD's side, the SID will receive information on time travel and alarm and play their sequences in sync with the TCD. Unlike BTTFN, however, no other communication takes place.
+
+![MQTT connection](https://github.com/realA10001986/SID/assets/76924199/f2838deb-c673-4bfb-9e09-88e26691742f)
+
+MQTT and BTTFN can co-exist. However, the TCD only sends out time travel and alarm notifications through either MQTT or BTTFN, never both. If you have other MQTT-aware devices listening to the TCD's public topic (bttf/tcd/pub) in order to react to time travel or alarm messages, use MQTT (ie check **_Send event notifications_**). If only BTTFN-aware devices are to be used, uncheck this option to use BTTFN as it has less latency.
 
 ### Setup
 
@@ -436,11 +432,19 @@ Number of seconds before a timeout occurs when connecting to a WiFi network. Whe
 
 ##### &#9654; TCD connected by wire
 
-Check this if you have a Time Circuits Display connected by wire. Note that you can only connect *either* a button *or* the TCD to the "time travel" connector on the SID, but not both.
+Check this if you have a Time Circuits Display connected by wire. You can only connect *either* a button *or* the TCD to the "time travel" connector on the SID, but not both.
 
 Note that a wired connection only allows for synchronized time travel sequences, no other communication takes place.
 
 Also note that the process of [learning keys from an IR remote control](#ir-remote-control) requires this option to be unchecked. After learning keys is done, you can, of course, check this option again.
+
+Do NOT check this option if your TCD is connected wirelessly (BTTFN, MQTT).
+
+##### &#9654; TCD signals Time Travel without 5s lead
+
+Usually, the TCD signals a time travel with a 5 seconds lead, in order to give a prop a chance to play an acceletation sequence before the actual time travel takes place. Since this 5 second lead is unique to CircuitSetup props, and people sometimes want to connect third party props to the TCD, the TCD has the option of skipping this 5 seconds lead. That that is the case, and your SID is connected by wire, you need to set this option.
+
+If your SID is connected wirelessly, this option has no effect.
 
 ##### &#9654; IP address of TCD
 
