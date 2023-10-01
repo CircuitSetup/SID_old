@@ -275,7 +275,7 @@ static bool          BTTFNBootTO = false;
 
 static int      iCmdIdx = 0;
 static int      oCmdIdx = 0;
-static uint16_t commandQueue[16] = { 0 };
+static uint32_t commandQueue[16] = { 0 };
 
 // Forward declarations ------
 
@@ -1628,16 +1628,14 @@ static void handleIRKey(int key)
 
 static void handleRemoteCommand()
 {
-    uint16_t command = commandQueue[oCmdIdx];
+    uint32_t command = commandQueue[oCmdIdx];
 
     if(!command)
         return;
 
+    commandQueue[oCmdIdx] = 0;
     oCmdIdx++;
     oCmdIdx &= 0x0f;
-
-    if(command > 999)
-        return;
 
     if(ssActive) {
         ssEnd();
@@ -1689,10 +1687,18 @@ static void handleRemoteCommand()
       
         sprintf(inputBuffer, "%02d", command);
         
-    } else {
+    } else if(command < 1000) {
       
         sprintf(inputBuffer, "%03d", command);
         
+    } else if(command < 100000) {
+
+        sprintf(inputBuffer, "%05d", command);
+        
+    } else {
+      
+        sprintf(inputBuffer, "%06d", command);
+
     }
 
     execute(false);
@@ -1824,7 +1830,7 @@ static bool execute(bool isIR)
     case 5:
         if(!isIRLocked) {
             if(!strcmp(inputBuffer, "64738")) {
-                sid.clearDisplayDirect();
+                allOff();
                 endIRfeedback();
                 delay(50);
                 esp_restart();
@@ -2113,7 +2119,7 @@ void mydelay(unsigned long mydel, bool withIR)
  * BTTF network communication
  */
 
-static void addCmdQueue(uint16_t command)
+static void addCmdQueue(uint32_t command)
 {
     if(!command) return;
 
@@ -2232,7 +2238,8 @@ static void BTTFNCheckPacket()
             // Eval this at our convenience
             break;
         case BTTFN_NOT_SID_CMD:
-            addCmdQueue(BTTFUDPBuf[6] | (BTTFUDPBuf[7] << 8));
+            addCmdQueue( BTTFUDPBuf[6] | (BTTFUDPBuf[7] << 8) |
+                        (BTTFUDPBuf[8] | (BTTFUDPBuf[9] << 8)) << 16);
             break;  
         }
       

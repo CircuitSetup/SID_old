@@ -201,15 +201,15 @@ In order to only disable the supplied IR remote control, check the option **_Dis
     </tr>
     <tr>
      <td align="left">Reboot the device</td>
-     <td align="left">*64738&#9166;</td><td>n/a</td>
+     <td align="left">*64738&#9166;</td><td>6064738</td>
     </tr>
     <tr>
      <td align="left">Delete static IP address<br>and WiFi-AP password</td>
-     <td align="left">*123456&#9166;</td><td>n/a</td>
+     <td align="left">*123456&#9166;</td><td>6123456</td>
     </tr>
     <tr>
      <td align="left">Delete learned IR remote control</td>
-     <td align="left">*654321&#9166;</td><td>n/a</td>
+     <td align="left">*654321&#9166;</td><td>6654321</td>
     </tr>
 </table>
 
