@@ -241,7 +241,7 @@ Snakes like apples (at least so I have heard). You control a snake that feels a 
 
 Preface note on SD cards: For unknown reasons, some SD cards simply do not work with this device. For instance, I had no luck with Sandisk Ultra 32GB and  "Intenso" cards. If your SD card is not recognized, check if it is formatted in FAT32 format (not exFAT!). Also, the size must not exceed 32GB (as larger cards cannot be formatted with FAT32). I am currently using Transcend SDHC 4GB cards and those work fine.
 
-The SD card is used for saving secondary settings, in order to avoid flash wear on the SID's ESP32.
+The SD card is used for saving secondary settings, in order to avoid flash wear on the SID's ESP32. The chosen idle pattern (*1x) is only stored on SD, so for it to be persistent accross reboots, an SD card is required. 
 
 Note that the SD card must be inserted before powering up the device. It is not recognized if inserted while the SID is running. Furthermore, do not remove the SD card while the device is powered.
 
@@ -482,6 +482,6 @@ The username (and optionally the password) to be used when connecting to the bro
 
 ##### &#9654; Save secondary settings on SD
 
-If this is checked, some settings (brightness, idle pattern), as well as learned IR codes are stored on the SD card. This helps to minimize write operations to the internal flash memory and to prolong the lifetime of your SID. See [Flash Wear](#flash-wear).
+If this is checked, secondary settings (brightness, IR lock status, learned IR keys) are stored on the SD card. This helps to minimize write operations to the internal flash memory and to prolong the lifetime of your SID. See [Flash Wear](#flash-wear).
 
 
