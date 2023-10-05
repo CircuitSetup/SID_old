@@ -1,6 +1,6 @@
 # Firmware for Status Indicator Display (SID)
 
-This repository holds the most current firmware for CircuitSetup's magnificent [SID](https://circuitsetup.us).
+This repository holds the most current firmware for CircuitSetup's magnificent [SID](https://circuitsetup.us). The SID, also known as "Field Containment System Display", is an important part of Doc Brown's time machine in the "Back to the Future" movies.
 
 The hardware is available [here](https://circuitsetup.us).
 
@@ -69,7 +69,7 @@ By default, it idles and shows an idle pattern. There are alternative idle patte
 
 For the options to trigger a time travel, see [here](#time-travel).
 
-The main control device is the supplied IR remote control.  If a TCD is connected through [BTTF-Network](#bttf-network-bttfn), the FC can also be controlled through the TCD's keypad.
+The main control device is the supplied IR remote control.  If a TCD is connected through [BTTF-Network](#bttf-network-bttfn), the SID can also be controlled through the TCD's keypad.
 
 ### IR remote control
 
@@ -97,7 +97,7 @@ To make the SID forget a learned IR remote control, type *654321 followed by OK.
 
 ### Locking IR control
 
-You can have your SID ignore IR commands from any IR remote control (be it the default supplied one, be it one you had the SID learn) by entering *71 followed by OK. After this sequence the SID will ignore all IR commands until *71OK is entered again. The purpose of this function is to enable you to use the same IR control for your FC and other props (such as Flux Capacitor).
+You can have your SID ignore IR commands from any IR remote control (be it the default supplied one, be it one you had the SID learn) by entering *71 followed by OK. After this sequence the SID will ignore all IR commands until *71OK is entered again. The purpose of this function is to enable you to use the same IR control for your SID and other props (such as Flux Capacitor).
 
 Note that the status of the IR lock is saved 10 seconds after its last change, and is persistent accross reboots.
 
