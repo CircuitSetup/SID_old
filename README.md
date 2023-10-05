@@ -1,6 +1,6 @@
 # Firmware for Status Indicator Display (SID)
 
-This repository holds the most current firmware for CircuitSetup's magnificent [SID](https://circuitsetup.us).
+This repository holds the most current firmware for CircuitSetup's magnificent [SID](https://circuitsetup.us). The SID, also known as "Field Containment System Display", is an important part of Doc Brown's time machine in the "Back to the Future" movies.
 
 The hardware is available [here](https://circuitsetup.us).
 
