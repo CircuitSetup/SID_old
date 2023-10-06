@@ -3,7 +3,7 @@
  * CircuitSetup.us Status Indicator Display
  * (C) 2023 Thomas Winischhofer (A10001986)
  * https://github.com/realA10001986/SID
- * http://sid.backtothefutu.re
+ * https://sid.backtothefutu.re
  *
  * Main controller
  *
@@ -54,7 +54,7 @@ static uint8_t IRFeedBackPin = IR_FB_PIN;
 
 // The tt button / TCD tt trigger
 static SIDButton TTKey = SIDButton(TT_IN_PIN,
-    false,    // Button is active HIGH
+    false,    // Button/Trigger is active HIGH
     false     // Disable internal pull-up resistor
 );
 
@@ -254,10 +254,11 @@ static const char    IRLearnKeys[] = "0123456789*#^$<>~";
 #define BTTFN_NOT_FLUX_CMD 7
 #define BTTFN_NOT_SID_CMD  8
 #define BTTFN_NOT_PCG_CMD  9
+#define BTTFN_NOT_WAKEUP   10
 #define BTTFN_TYPE_ANY     0    // Any, unknown or no device
 #define BTTFN_TYPE_FLUX    1    // Flux Capacitor
 #define BTTFN_TYPE_SID     2    // SID
-#define BTTFN_TYPE_PCG     3    // Plutonium chamber gauge panel
+#define BTTFN_TYPE_PCG     3    // Plutonium gauge panel
 static const uint8_t BTTFUDPHD[4] = { 'B', 'T', 'T', 'F' };
 static bool          useBTTFN = false;
 static WiFiUDP       bttfUDP;
@@ -377,7 +378,7 @@ void main_setup()
         TTKey.setPressTicks(50);
         TTKey.setLongPressTicks(100000);
         // Long press ignored when TCD is connected
-        // IRLearning only possible if TCD is not connected!
+        // IRLearning only possible if "TCD connected by wire" unset.
     }
 
     #ifdef SID_DBG
@@ -1753,13 +1754,13 @@ static bool execute(bool isIR)
             switch(temp) {
             case 0:
             case 20:
-                if(!TTrunning && !isIRLocked) {   // *00, *20 idle mode
+                if(!TTrunning && !isIRLocked) {   // *00(deprecated), *20 idle mode
                     span_stop();
                     siddly_stop();
                     snake_stop();
                 }
                 break;
-            case 1:                               // *01, *21 sa mode
+            case 1:                               // *01(deprecated), *21 sa mode
             case 21:
                 if(!TTrunning && !isIRLocked) {
                     siddly_stop();
@@ -1767,7 +1768,7 @@ static bool execute(bool isIR)
                     span_start();
                 }
                 break;
-            case 2:                               // *02, *22 siddly
+            case 2:                               // *02(deprecated), *22 siddly
             case 22:
                 if(!TTrunning && !isIRLocked) {
                     span_stop();
@@ -1775,7 +1776,7 @@ static bool execute(bool isIR)
                     siddly_start();
                 }
                 break;
-            case 3:                               // *03, *23 snake
+            case 3:                               // *03(deprecated), *23 snake
             case 23:
                 if(!TTrunning && !isIRLocked) {
                     siddly_stop();
@@ -2087,6 +2088,15 @@ void prepareTT()
     // TODO FIXME
 }
 
+// Wakeup: Sent by TCD upon entering dest date,
+// return from tt, triggering delayed tt via ETT
+// For audio-visually synchronized behavior
+void wakeup()
+{
+    // End screen saver
+    ssEnd();
+}
+
 /*
  *  Do this whenever we are caught in a while() loop
  *  This allows other stuff to proceed
@@ -2206,7 +2216,9 @@ static void BTTFNCheckPacket()
             // may not come at all.
             // We don't ignore this if TCD is connected by wire,
             // because this signal does not come via wire.
-            prepareTT();
+            if(!TTrunning && !IRLearning) {
+                prepareTT();
+            }
             break;
         case BTTFN_NOT_TT:
             // Trigger Time Travel (if not running already)
@@ -2240,7 +2252,12 @@ static void BTTFNCheckPacket()
         case BTTFN_NOT_SID_CMD:
             addCmdQueue( BTTFUDPBuf[6] | (BTTFUDPBuf[7] << 8) |
                         (BTTFUDPBuf[8] | (BTTFUDPBuf[9] << 8)) << 16);
-            break;  
+            break;
+        case BTTFN_NOT_WAKEUP:
+            if(!TTrunning && !IRLearning) {
+                wakeup();
+            }
+            break;
         }
       
     } else {

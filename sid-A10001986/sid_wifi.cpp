@@ -3,7 +3,7 @@
  * CircuitSetup.us Status Indicator Display
  * (C) 2023 Thomas Winischhofer (A10001986)
  * https://github.com/realA10001986/SID
- * http://sid.backtothefutu.re
+ * https://sid.backtothefutu.re
  *
  * WiFi and Config Portal handling
  *
@@ -140,9 +140,9 @@ WiFiManagerParameter custom_mqttUser("ha_usr", "User[:Password]", settings.mqttU
 #endif // HAVEMQTT
 
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
-WiFiManagerParameter custom_CfgOnSD("CfgOnSD", "Save secondary settings on SD (0=no, 1=yes)<br><span style='font-size:80%'>Enable this to avoid flash wear; settings for brightness, IR will be saved to SD.</span>", settings.CfgOnSD, 1, "autocomplete='off'");
+WiFiManagerParameter custom_CfgOnSD("CfgOnSD", "Save secondary settings on SD (0=no, 1=yes)<br><span style='font-size:80%'>Enable this to avoid flash wear</span>", settings.CfgOnSD, 1, "autocomplete='off'");
 #else // -------------------- Checkbox hack: --------------
-WiFiManagerParameter custom_CfgOnSD("CfgOnSD", "Save secondary settings on SD<br><span style='font-size:80%'>Check this to avoid flash wear; settings for brightness, IR will be saved to SD.</span>", settings.CfgOnSD, 1, "autocomplete='off' type='checkbox' style='margin-top:5px'", WFM_LABEL_AFTER);
+WiFiManagerParameter custom_CfgOnSD("CfgOnSD", "Save secondary settings on SD<br><span style='font-size:80%'>Check this to avoid flash wear</span>", settings.CfgOnSD, 1, "autocomplete='off' type='checkbox' style='margin-top:5px'", WFM_LABEL_AFTER);
 #endif // -------------------------------------------------
 //#ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
 //WiFiManagerParameter custom_sdFrq("sdFrq", "SD clock speed (0=16Mhz, 1=4Mhz)<br><span style='font-size:80%'>Slower access might help in case of problems with SD cards</span>", settings.sdFreq, 1, "autocomplete='off'");
@@ -1180,6 +1180,7 @@ static void mqttCallback(char *topic, byte *payload, unsigned int length)
       "REENTRY",          // 2
       "ABORT_TT",         // 3
       "ALARM",            // 4
+      "WAKEUP",           // 5
       NULL
     };
 
@@ -1245,6 +1246,11 @@ static void mqttCallback(char *topic, byte *payload, unsigned int length)
         case 4:
             networkAlarm = true;
             // Eval this at our convenience
+            break;
+        case 5:
+            if(!TTrunning && !IRLearning) {
+                wakeup();
+            }
             break;
         }
        
