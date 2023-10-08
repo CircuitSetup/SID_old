@@ -387,8 +387,8 @@ Enter the number of minutes until the Screen Saver should become active when the
 
 The Screen Saver, when active, disables all LEDs, until 
 - a key on the IR remote control is pressed; if IR is [locked](#locking-ir-control), only the # key deactivates the Screen Saver;
-- the time travel button is briefly pressed,
-- a time travel event is triggered from a connected TCD (wire or wirelessly)
+- the time travel button is briefly pressed (the first press when the screen saver is active will not trigger a time travel),
+- on a connected TCD, a destination date is entered (only if TCD is wirelessly connected) or a time travel event is triggered (also when wired).
 
 ##### &#9654; Show peaks in Spectrum Analyzer
 
@@ -482,6 +482,6 @@ The username (and optionally the password) to be used when connecting to the bro
 
 ##### &#9654; Save secondary settings on SD
 
-If this is checked, secondary settings (brightness, IR lock status, learned IR keys) are stored on the SD card. This helps to minimize write operations to the internal flash memory and to prolong the lifetime of your SID. See [Flash Wear](#flash-wear).
+If this is checked, secondary settings (brightness, IR lock status, learned IR keys) are stored on the SD card (if one is present). This helps to minimize write operations to the internal flash memory and to prolong the lifetime of your SID. See [Flash Wear](#flash-wear).
 
 

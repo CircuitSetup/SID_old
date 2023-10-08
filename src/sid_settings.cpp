@@ -3,7 +3,7 @@
  * CircuitSetup.us Status Indicator Display
  * (C) 2023 Thomas Winischhofer (A10001986)
  * https://github.com/realA10001986/SID
- * http://sid.backtothefutu.re
+ * https://sid.backtothefutu.re
  *
  * Settings & file handling
  * 
@@ -72,11 +72,11 @@ static bool prevSavedIRL = 0;
 bool FlashROMode = false;
 
 static const char *cfgName    = "/sidconfig.json";  // Main config (flash)
-static const char *briCfgName = "/sidbricfg.json";  // Brightness config (flash/SD)
 static const char *ipCfgName  = "/sidipcfg.json";   // IP config (flash)
-static const char *irUCfgName = "/sidirkeys.txt";   // IR keys (user-created) (SD)
+static const char *briCfgName = "/sidbricfg.json";  // Brightness config (flash/SD)
 static const char *irCfgName  = "/sidirkeys.json";  // IR keys (system-created) (flash/SD)
 static const char *irlCfgName = "/sidirlcfg.json";  // IR lock (flash/SD)
+static const char *irUCfgName = "/sidirkeys.txt";   // IR keys (user-created) (SD)
 static const char *ipaCfgName = "/sidipat.json";    // Idle pattern (SD only)
 
 static const char *jsonNames[NUM_IR_KEYS] = {
@@ -535,12 +535,16 @@ static bool openCfgFileWrite(const char *fn, File& f, bool SDonly = false)
 
 bool loadBrightness()
 {
+    #ifdef SID_DBG
     const char *funcName = "loadBrightness";
+    #endif
     char temp[6];
     File configFile;
 
     if(!haveFS && !configOnSD) {
+        #ifdef SID_DBG
         Serial.printf("%s: %s\n", funcName, fsNoAvail);
+        #endif
         return false;
     }
 
@@ -607,12 +611,16 @@ void saveBrightness(bool useCache)
 
 bool loadIdlePat()
 {
+    #ifdef SID_DBG
     const char *funcName = "loadIdlePat";
+    #endif
     char temp[6];
     File configFile;
 
     if(!haveSD) {
+        #ifdef SID_DBG
         Serial.printf("%s: %s\n", funcName, fsNoAvail);
+        #endif
         return false;
     }
 
@@ -675,12 +683,16 @@ void saveIdlePat(bool useCache)
 
 bool loadIRLock()
 {
+    #ifdef SID_DBG
     const char *funcName = "loadIRLock";
+    #endif
     char temp[6];
     File configFile;
 
     if(!haveFS && !configOnSD) {
+        #ifdef SID_DBG
         Serial.printf("%s: %s\n", funcName, fsNoAvail);
+        #endif
         return false;
     }
 
@@ -787,7 +799,9 @@ static bool loadIRKeys()
             if(configFile) {
                 loadIRkeysFromFile(configFile, 0);
             } else {
+                #ifdef SID_DBG
                 Serial.printf("%s not found on SD card\n", irUCfgName);
+                #endif
             }
         }
     }
@@ -845,7 +859,7 @@ void deleteIRKeys()
     }
 }
 
-/* Copy IR settings from/to SD if user
+/* Copy secondary settings from/to SD if user
  * changed "save to SD"-option in CP
  */
 
@@ -858,11 +872,12 @@ void copySettings()
 
     if(configOnSD || !FlashROMode) {
         #ifdef SID_DBG
-        Serial.println(F("copySettings: Copying IR/bri settings to other medium"));
+        Serial.println(F("copySettings: Copying secondary settings to other medium"));
         #endif
         saveBrightness(false);
         saveIRLock(false);
         saveIRKeys();
+        // NOT idlePat, is only stored on SD
     }
 
     configOnSD = !configOnSD;

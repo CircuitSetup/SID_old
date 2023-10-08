@@ -3,7 +3,7 @@
  * CircuitSetup.us Status Indicator Display
  * (C) 2023 Thomas Winischhofer (A10001986)
  * https://github.com/realA10001986/SID
- * http://sid.backtothefutu.re
+ * https://sid.backtothefutu.re
  *
  * License: MIT
  * 
@@ -78,6 +78,8 @@
 
 /*  Changelog
  *  
+ *  2023/10/05 (A10001986)
+ *    - Add support for "wakeup" command (BTTFN/MQTT)
  *  2023/09/30 (A10001986)
  *    - Extend remote commands to 32 bit
  *    - Fix ring buffer handling for remote commands

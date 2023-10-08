@@ -3,7 +3,7 @@
  * CircuitSetup.us Status Indicator Display
  * (C) 2023 Thomas Winischhofer (A10001986)
  * https://github.com/realA10001986/SID
- * http://sid.backtothefutu.re
+ * https://sid.backtothefutu.re
  *
  * Main controller
  *
@@ -76,6 +76,7 @@ void showWordSequence(const char *text, int speed = 3);
 void mydelay(unsigned long mydel, bool withIR);
 
 void prepareTT();
+void wakeup();
 
 void switch_to_idle();
 void switch_to_sa();

@@ -3,7 +3,7 @@
  * CircuitSetup.us Status Indicator Display
  * (C) 2023 Thomas Winischhofer (A10001986)
  * https://github.com/realA10001986/SID
- * http://sid.backtothefutu.re
+ * https://sid.backtothefutu.re
  *
  * Global definitions
  */
@@ -12,8 +12,8 @@
 #define _SID_GLOBAL_H
 
 // Version strings.
-#define SID_VERSION       "V0.43"
-#define SID_VERSION_EXTRA "SEP302023"
+#define SID_VERSION       "V0.45"
+#define SID_VERSION_EXTRA "OCT052023"
 
 //#define SID_DBG              // debug output on Serial
 
@@ -47,8 +47,9 @@
 //#define USE_SPIFFS
 
 // External time travel lead time, as defined by TCD firmware
-// If SID is connected by wire, the option "Signal Time Travel without 5s 
-// lead" on the TCD must NOT be set.
+// If SID is connected by wire, and the option "Signal Time Travel without 5s 
+// lead" is set on the TCD, the SID option "TCD signals without lead" must
+// be set, too.
 #define ETTO_LEAD 5000
 
 /*************************************************************************
