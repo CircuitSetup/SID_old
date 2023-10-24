@@ -78,6 +78,9 @@
 
 /*  Changelog
  *  
+ *  2023/10/24 (A10001986)
+ *    - Switch i2c speed to 400kHz
+ *    - Various fixes to (until now blindly written) Spectrum Analyzer
  *  2023/10/05 (A10001986)
  *    - Add support for "wakeup" command (BTTFN/MQTT)
  *  2023/09/30 (A10001986)
@@ -205,7 +208,7 @@ void setup()
     Serial.begin(115200);
     Serial.println();
 
-    Wire.begin(-1, -1, 100000);
+    Wire.begin(-1, -1, 400000);
 
     main_boot();
     settings_setup();

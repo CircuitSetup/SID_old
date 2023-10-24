@@ -542,7 +542,10 @@ void main_loop()
 
     // Spectrum analyzer / Siddly / Snake loops
     if(FPBUnitIsOn && !TTrunning) {
-        sa_loop();
+        //unsigned long now2 = millis();
+        sa_loop();    // 33ms (400Khz i2c, Rectangle)
+        //now2 -= millis();
+        //Serial.printf("%d\n", now2 * -1);
         si_loop();
         sn_loop();
     }

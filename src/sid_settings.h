@@ -44,7 +44,7 @@ extern uint8_t musFolderNum;
 // Default settings - change settings in the web interface 192.168.4.1
 
 #define DEF_SS_TIMER        0     // "Screen saver" timeout in minutes; 0 = ss off
-#define DEF_SA_PEAKS        1     // 1: Show peaks in SA, 0: don't
+#define DEF_SA_PEAKS        0     // 1: Show peaks in SA, 0: don't
 
 #define DEF_DISDIR          0     // 0: Do not disable default IR remote control; 1: do
 
