@@ -32,16 +32,20 @@
 
 #include "sid_global.h"
 
+#ifdef SID_DBG
+//#define SA_DBG_WRITEOUT
+#endif
+
 #include <Arduino.h>
-
 #include "src/arduinoFFT/arduinoFFT.h"
-
 #include <driver/i2s.h>
 #include <driver/adc.h>
-
 #include <soc/i2s_reg.h>
 
 #include "sid_main.h"
+#ifdef SA_DBG_WRITEOUT
+#include "sid_settings.h"
+#endif
 
 #define NUMBANDS      11
 #define DISPLAYBANDS  10
@@ -50,36 +54,47 @@
 #define NUMSAMPLES  1024
 #define SAMPLERATE 32000
 
-#define PEAK_HOLD    500   //ms
-#define PEAK_FALL    100   //ms
+#define PEAK_HOLD    500   // ms
+#define PEAK_FALL    100   // ms
 
-const i2s_port_t I2S_PORT = I2S_NUM_0;
+static const i2s_port_t I2S_PORT = I2S_NUM_0;
 
-int32_t rawSamples[NUMSAMPLES];
-double  vReal[NUMSAMPLES];
-double  vImag[NUMSAMPLES];
+static int32_t rawSamples[NUMSAMPLES];
+static double  vReal[NUMSAMPLES];
+static double  vImag[NUMSAMPLES];
 
-double freqBands[NUMBANDS + 1] = { 0 };
+static double freqBands[NUMBANDS] = { 0 };
 
-int minTreshold = 1000;   // below considered noise FIXME
-
+// The frequency bands
+// First one is "garbage bin", not used for display
 static int freqSteps[NUMBANDS] = {
-   20, 70, 150, 400, 650, 1000, 2500, 4000, 6000, 8000, 12000
+   //110,  200,  400,  600,  800, 1000, 2500, 3500, 5000, 7000, 9000
+   // 60,  150,  250,  400,  650, 1000, 1600, 2500, 4000, 6250, 10000
+      80,  100,  150,  250,  430,  650, 1000, 2000, 4000, 7000, 10000
+};
+
+static int minTreshold[NUMBANDS] = {
+       0, 5000, 5000, 5000, 3000, 1000, 1000, 1000, 1000, 1000, 1000
 };
 
 static int     oldHeight[NUMBANDS]  = { 0 };
-static double  oldMmax = 0.0;
 
 static uint8_t       peaks[NUMBANDS + 1]  = { 0 };
 static unsigned long newPeak[NUMBANDS]    = { 0 };
 static unsigned long peakTimer[NUMBANDS]  = { 0 };
 
 bool        saActive = false;
-bool        doPeaks = true;
+bool        doPeaks = false;
 static bool sa_avail = false;
 static unsigned long lastTime = 0;
-static unsigned long lastCorr = 0;
 int         ampFact = 100;
+
+#ifdef SA_DBG_WRITEOUT
+#include <SD.h>
+#include <FS.h>
+static File outFile;
+static bool outFileOpen = false;
+#endif
 
 static const i2s_pin_config_t i2sPins = {
     .bck_io_num   = I2S_BCLK_PIN,
@@ -91,12 +106,12 @@ static const i2s_pin_config_t i2sPins = {
 static const i2s_config_t i2s_config = {
     .mode                 = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
     .sample_rate          = SAMPLERATE,
-    .bits_per_sample      = I2S_BITS_PER_SAMPLE_32BIT,    // I2S_BITS_PER_SAMPLE_16BIT
-    .channel_format       = I2S_CHANNEL_FMT_ONLY_RIGHT,   // I2S_CHANNEL_FMT_ONLY_LEFT,    // I2S_CHANNEL_FMT_RIGHT_LEFT  I2S_CHANNEL_FMT_ONLY_RIGHT
-    .communication_format = I2S_COMM_FORMAT_STAND_MSB,    // I2S_COMM_FORMAT_STAND_I2S,
+    .bits_per_sample      = I2S_BITS_PER_SAMPLE_32BIT,
+    .channel_format       = I2S_CHANNEL_FMT_ONLY_RIGHT,
+    .communication_format = I2S_COMM_FORMAT_STAND_MSB,
     .intr_alloc_flags     = ESP_INTR_FLAG_LEVEL1,
     .dma_buf_count        = 4,
-    .dma_buf_len          = NUMSAMPLES,
+    .dma_buf_len          = 1024,
     .use_apll             = false,
     .tx_desc_auto_clear   = false,
     .fixed_mclk           = 0
@@ -124,6 +139,13 @@ static bool sa_setup()
     i2s_set_pin(I2S_PORT, &i2sPins);
 
     sa_avail = true;
+
+    #ifdef SA_DBG_WRITEOUT
+    if(haveSD) {
+        outFile = SD.open("/sidsa.pcm", FILE_WRITE);
+        outFileOpen = true;
+    }
+    #endif
 
     return true;
 }
@@ -155,7 +177,6 @@ void sa_activate()
     sa_resume();
 
     lastTime = millis();
-    lastCorr = 0;
 
     if(sa_avail)
         saActive = true;
@@ -167,6 +188,11 @@ void sa_deactivate()
         sa_stop();
 
     saActive = false;
+
+    #ifdef SA_DBG_WRITEOUT
+    outFile.close();
+    outFileOpen = false;
+    #endif
 }
 
 int sa_setAmpFact(int newAmpFact)
@@ -183,21 +209,14 @@ int sa_setAmpFact(int newAmpFact)
 void sa_loop()
 {
     size_t bytesRead = 0;
-    int32_t temp, maxP = 0, maxN = 0;
     unsigned long now = millis();
+    int mmaxi = 0, band = 0;
     
     if(!saActive || !sa_avail)
         return;
     
-    if(lastTime && (now - lastTime - lastCorr < (NUMSAMPLES * 1000 / SAMPLERATE)))
-        return;      
-
-    // Calculate loop delay correctional value to keep the pace
-    lastCorr = now - lastTime;
-    if(lastCorr < (NUMSAMPLES * 1000 / SAMPLERATE))
-        lastCorr = 0;
-    else 
-        lastCorr -= (NUMSAMPLES * 1000 / SAMPLERATE);
+    if(lastTime && (now - lastTime < (NUMSAMPLES * 1000 / SAMPLERATE)))
+        return;
 
     lastTime = now;
 
@@ -206,38 +225,36 @@ void sa_loop()
 
     if(bytesRead != sizeof(rawSamples)) {
         // what now?
+        #ifdef SID_DBG
         Serial.println("bytesRead != sizeof(rawSamples)");
+        #endif
     }
 
-    // Correct format and clear vImag
+    #ifdef SA_DBG_WRITEOUT
+    
+    if(outFileOpen) {
+        outFile.write((uint8_t *)&rawSamples[0], NUMSAMPLES * 4);
+    }
+    
+    #else
+
+    // Convert; clear vImag
     for(int i = 0; i < NUMSAMPLES; i++) {
-        temp = rawSamples[i] / 16384; // do NOT shift; result of shifting negative integer is undefined.
-        if(temp < maxN) maxN = temp;
-        if(temp > maxP) maxP = temp;
-        vReal[i] = (double)temp;
+        vReal[i] = (double)(rawSamples[i] / 16384); // do NOT shift; result of shifting negative integer is undefined.;
         vImag[i] = 0.0;
     }
-
-    // Reset bands
-    for(int i = 0; i <= NUMBANDS; i++) {
-        freqBands[i] = 0.0;
-    }
-
-    #if 0
-    for(int i = 0; i < 1; i++) {
-        Serial.printf("%d %d %d %d %d ->", 
-          rawSamples[(i*5)], rawSamples[(i*5)+1], rawSamples[(i*5)+2], rawSamples[(i*5)+3], rawSamples[(i*5)+4]);
-        Serial.printf("%.1f %.1f %.1f %.1f %.1f\n", 
-            vReal[(i*5)], vReal[(i*5)+1], vReal[(i*5)+2], vReal[(i*5)+3], vReal[(i*5)+4]);
-    }
-    #endif
 
     // Do the FFT
     arduinoFFT FFT = arduinoFFT(vReal, vImag, NUMSAMPLES, SAMPLERATE);
 
+    // Remove hum and dc offset
     FFT.DCRemoval();
-    FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);      //FFT.Windowing(vReal, NUMSAMPLES, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-    FFT.Compute(FFT_FORWARD);                             //FFT.Compute(vReal, vImag, NUMSAMPLES, FFT_FORWARD);
+
+    // Windowing: "Rectangle" does fine for our purpose
+    //FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+    FFT.Windowing(FFT_WIN_TYP_RECTANGLE, FFT_FORWARD);
+    
+    FFT.Compute(FFT_FORWARD);
     
     //FFT.ComplexToMagnitude(); // Covers entire array, half would do
     FFT.ComplexToMagnitude(vReal, vImag, NUMSAMPLES/2);
@@ -245,29 +262,29 @@ void sa_loop()
     // Fill frequency bands
     // Max freq = Half of sampling rate => (SAMPLERATE / 2)
     // vReal only filled half because of this => (NUMSAMPLES / 2)
+    band = 0;
     for(int i = 3; i < NUMSAMPLES / 2; i++) {
-        if(vReal[i] > minTreshold) {
-            int freq = (i - 2) * (SAMPLERATE / 2) / (NUMSAMPLES / 2);
-            int band = 0;
-            while(freq >= freqSteps[band]) {
-                band++;
-                if(band == NUMBANDS) break;
-            }
+        int freq = (i - 2) * (SAMPLERATE / 2) / (NUMSAMPLES / 2);
+        if(freq >= freqSteps[band]) {
+            band++;
+            if(band == NUMBANDS) break;
+            else freqBands[band] = 0.0;
+        }
+        if(band && (vReal[i] > minTreshold[band])) {
             freqBands[band] += vReal[i];      
         }
     }
 
     // Find maximum for scaling
-    double mmax = 1.0; //, avg = 0.0;
+    double mmax = 1.0;
     for(int i = 1; i < NUMBANDS; i++) {
         if(mmax < freqBands[i]) mmax = freqBands[i];
-        //avg += freqBands[i];
     }
-    //avg /= 10.0;
-    
-    // Smoothen change of mmax in downward direction
-    mmax = max(mmax, (oldMmax + mmax) / 2.0);
-    oldMmax = mmax;
+
+    // No point in smoothening mmax changes; is relative
+    // to amplitude of sample block (32ms @ 1024 @ 32kHz)
+    // and therefore not in any way valid over more than one
+    // sample block.
 
     // Convert freqBands to height factors
     for(int i = 1; i < NUMBANDS; i++) {
@@ -278,7 +295,7 @@ void sa_loop()
 
     // Calculate bar heights
     for(int i = 0; i < DISPLAYBANDS; i++) {
-        int height = (int)(freqBands[i+1] * (double)LEDS_PER_BAR);
+        int height = (int)(freqBands[i+1] * (double)(LEDS_PER_BAR - 1));
 
         if(ampFact != 100) {
             if(!height) height = 1;
@@ -288,8 +305,11 @@ void sa_loop()
         if(height > LEDS_PER_BAR) height = LEDS_PER_BAR;
         if(!height) height = 1;
   
-        // Smoothen jumps
-        height = (oldHeight[i] + height) / 2;
+        // Smoothen jumps in downward direction
+        if(height < oldHeight[i]) {
+            if(oldHeight[i] - height > 10) height = (oldHeight[i] + height) / 2;
+            else                           height = oldHeight[i] - 1;
+        }
 
         // Now do peak
         if(height - 1 > peaks[i]) {
@@ -324,4 +344,6 @@ void sa_loop()
             }
         }
     }
+
+    #endif
 }
