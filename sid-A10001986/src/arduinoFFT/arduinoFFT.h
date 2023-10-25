@@ -21,6 +21,19 @@
 
 #ifndef ArduinoFFT_h /* Prevent loading library twice */
 #define ArduinoFFT_h
+
+//#define FFT_DOUBLE
+
+#ifdef FFT_DOUBLE
+#define FTYPE double
+#define FFT_COS cos
+#define FFT_SQRT sqrt
+#else
+#define FTYPE float
+#define FFT_COS cosf
+#define FFT_SQRT sqrtf
+#endif
+
 #ifdef ARDUINO
 #if ARDUINO >= 100
 #include "Arduino.h"
@@ -91,12 +104,12 @@ enum class FFTWindow {
 #define sixPi 18.84955593
 
 #ifdef __AVR__
-static const double _c1[] PROGMEM = {
+static const FTYPE _c1[] PROGMEM = {
     0.0000000000, 0.7071067812, 0.9238795325, 0.9807852804, 0.9951847267,
     0.9987954562, 0.9996988187, 0.9999247018, 0.9999811753, 0.9999952938,
     0.9999988235, 0.9999997059, 0.9999999265, 0.9999999816, 0.9999999954,
     0.9999999989, 0.9999999997};
-static const double _c2[] PROGMEM = {
+static const FTYPE _c2[] PROGMEM = {
     1.0000000000, 0.7071067812, 0.3826834324, 0.1950903220, 0.0980171403,
     0.0490676743, 0.0245412285, 0.0122715383, 0.0061358846, 0.0030679568,
     0.0015339802, 0.0007669903, 0.0003834952, 0.0001917476, 0.0000958738,
@@ -106,46 +119,47 @@ class arduinoFFT {
 public:
   /* Constructor */
   arduinoFFT(void);
-  arduinoFFT(double *vReal, double *vImag, uint16_t samples,
-             double samplingFrequency);
+  arduinoFFT(FTYPE *vReal, FTYPE *vImag, uint16_t samples,
+             FTYPE samplingFrequency);
   /* Destructor */
   ~arduinoFFT(void);
   /* Functions */
   uint8_t Revision(void);
   uint8_t Exponent(uint16_t value);
 
-  void ComplexToMagnitude(double *vReal, double *vImag, uint16_t samples);
-  void Compute(double *vReal, double *vImag, uint16_t samples,
+  void ComplexToMagnitude(FTYPE *vReal, FTYPE *vImag, uint16_t samples);
+  void Compute(FTYPE *vReal, FTYPE *vImag, uint16_t samples,
                FFTDirection dir);
-  void Compute(double *vReal, double *vImag, uint16_t samples, uint8_t power,
+  void Compute(FTYPE *vReal, FTYPE *vImag, uint16_t samples, uint8_t power,
                FFTDirection dir);
-  void DCRemoval(double *vData, uint16_t samples);
-  double MajorPeak(double *vD, uint16_t samples, double samplingFrequency);
-  void MajorPeak(double *vD, uint16_t samples, double samplingFrequency,
-                 double *f, double *v);
-  void Windowing(double *vData, uint16_t samples, FFTWindow windowType,
+  void DCRemoval(FTYPE *vData, uint16_t samples);
+  FTYPE MajorPeak(FTYPE *vD, uint16_t samples, FTYPE samplingFrequency);
+  void MajorPeak(FTYPE *vD, uint16_t samples, FTYPE samplingFrequency,
+                 FTYPE *f, FTYPE *v);
+  void Windowing(FTYPE *vData, uint16_t samples, FFTWindow windowType,
                  FFTDirection dir);
 
   void ComplexToMagnitude();
   void Compute(FFTDirection dir);
   void DCRemoval();
-  double MajorPeak();
-  void MajorPeak(double *f, double *v);
+  FTYPE MajorPeak();
+  void MajorPeak(FTYPE *f, FTYPE *v);
   void Windowing(FFTWindow windowType, FFTDirection dir);
 
-  double MajorPeakParabola();
+  FTYPE MajorPeakParabola();
 
 private:
   /* Variables */
   uint16_t _samples;
-  double _samplingFrequency;
-  double *_vReal;
-  double *_vImag;
+  FTYPE _samplingFrequency;
+  FTYPE *_vReal;
+  FTYPE *_vImag;
   uint8_t _power;
   /* Functions */
-  void Swap(double *x, double *y);
-  void Parabola(double x1, double y1, double x2, double y2, double x3,
-                double y3, double *a, double *b, double *c);
+  void Swap(FTYPE *x, FTYPE *y);
+  void Parabola(FTYPE x1, FTYPE y1, FTYPE x2, FTYPE y2, FTYPE x3,
+                FTYPE y3, FTYPE *a, FTYPE *b, FTYPE *c);
 };
 
 #endif
+

@@ -163,6 +163,23 @@ static const uint8_t seqEntry[21] = {
       0, 1, 2, 3, 4, 5, 6, 6, 7, 7, 8, 15, 18, 19, 20, 21, 21, 22, 22, 23, 24   // index in sequ
 };
 
+static const uint8_t idle4[14][10] = {
+    {  6,  8,  6,  5,  8, 11, 11, 11, 12, 12 }, // 1
+    { 10, 10, 10, 11, 11, 11, 11, 11, 12, 12 }, // 2
+    { 14, 14, 15, 13, 13, 11, 11, 11, 12, 12 }, // 3
+    { 14, 14, 15, 13, 13, 13, 13, 15, 14, 14 }, // 4
+    { 14, 14, 15, 13, 13, 15, 16, 19, 16, 17 }, // 5
+    { 16, 18, 17, 15, 17, 15, 16, 19, 16, 17 }, // 6
+    { 16, 18, 17, 15, 17, 20, 18, 20, 20, 20 }, // 7
+    { 19, 20, 20, 17, 19, 20, 18, 20, 20, 20 }, // 8
+    { 16, 18, 17, 15, 17, 20, 18, 20, 20, 20 }, // 9
+    { 16, 18, 17, 15, 17, 15, 16, 19, 16, 17 }, // 10
+    { 14, 14, 15, 13, 13, 15, 16, 19, 16, 17 }, // 11
+    { 14, 14, 15, 13, 13, 13, 13, 15, 14, 14 }, // 12
+    { 14, 14, 15, 13, 13, 11, 11, 11, 12, 12 }, // 13
+    { 10, 10, 10, 11, 11, 11, 11, 11, 12, 12 }  // 14
+};
+
 #define TT_AMP_STEPS 16
 static const int TTampFacts[TT_AMP_STEPS] = {
     100, 110, 120, 130, 150,
@@ -543,9 +560,9 @@ void main_loop()
     // Spectrum analyzer / Siddly / Snake loops
     if(FPBUnitIsOn && !TTrunning) {
         //unsigned long now2 = millis();
-        sa_loop();    // 33ms (400Khz i2c, Rectangle)
-        //now2 -= millis();
-        //Serial.printf("%d\n", now2 * -1);
+        sa_loop();    // 17ms: float / 28ms: double FFT [400Khz i2c, Rectangle]
+        //now2 = millis() - now2;
+        //Serial.printf("%d\n", now2);
         si_loop();
         sn_loop();
     }
@@ -712,7 +729,7 @@ void main_loop()
                 // SA mode: reduce ampFactor gradually
 
                 if(TTSAStopped) {
-                    sa_activate();
+                    sa_activate(false, 100);
                     TTSAStopped = false;
                 }
                 if(saActive && sa_setAmpFact(-1) > 100) {
@@ -844,7 +861,7 @@ void main_loop()
                 // SA mode: reduce ampFactor gradually
 
                 if(TTSAStopped) {
-                    sa_activate();
+                    sa_activate(false, 100);
                     TTSAStopped = false;
                 }
                 if(saActive && sa_setAmpFact(-1) > 100) {
@@ -973,6 +990,9 @@ static void showBaseLine(int variation, uint16_t flags)
         {  90, 60, 25,  60,  15,  80,  60,  40,  90,  60 }, // r 19
         {  90, 90, 70, 100,  90, 110,  90,  60,  95,  80 }  // extra for TT
     };
+    static const uint8_t maxTTHeight[10] = {
+        19, 19, 12, 19, 19, 19, 19,  9, 19, 16
+    };
 
     int bh, a = sidBaseLine, b;
     int vc = (flags & SBLF_ISTT) ? 0 : variation / 2;
@@ -996,6 +1016,9 @@ static void showBaseLine(int variation, uint16_t flags)
             }
             if(!(flags & SBLF_ISTT) && abs(bh - oldIdleHeight[i]) > 5) {
                 bh = (oldIdleHeight[i] + bh) / 2;
+            }
+            if(flags & SBLF_ISTT) {
+                if(bh > maxTTHeight[i]) bh = maxTTHeight[i];
             }
             sid.drawBar(i, 0, bh);
             oldIdleHeight[i] = bh;
