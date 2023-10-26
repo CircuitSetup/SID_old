@@ -76,6 +76,7 @@ uint16_t networkLead   = ETTO_LEAD;
 #define SBLF_LM       4
 #define SBLF_SKIPSHOW 8
 #define SBLF_LMTT     16
+#define SBLF_NOBL     32
 uint16_t              idleMode = 0;
 static int            sidBaseLine = 0;
 static unsigned long  lastChange = 0;
@@ -90,6 +91,25 @@ static unsigned long  lastChange2 = 0;
 static unsigned long  idleDelay2 = 800;
 static const char     LM[] = "  BACK TO THE FUTURE ";   // Space at beginning for letting pattern grow first
 static const char     LMTT[] = { 36, 37, 38, 39, 0 };
+
+#define ID5_STEPS 14
+static int id5idx = 0;
+static const uint8_t idle5[ID5_STEPS][10] = {
+    {  6,  8,  6,  5,  8, 11, 11, 11, 12, 12 }, // 1
+    { 10, 10, 10, 11, 11, 11, 11, 11, 12, 12 }, // 2
+    { 14, 14, 15, 13, 13, 11, 11, 11, 12, 12 }, // 3
+    { 14, 14, 15, 13, 13, 13, 13, 15, 14, 14 }, // 4
+    { 14, 14, 15, 13, 13, 15, 16, 19, 16, 17 }, // 5
+    { 16, 18, 17, 15, 17, 15, 16, 19, 16, 17 }, // 6
+    { 16, 18, 17, 15, 17, 20, 18, 20, 20, 20 }, // 7
+    { 19, 20, 20, 17, 19, 20, 18, 20, 20, 20 }, // 8
+    { 16, 18, 17, 15, 17, 20, 18, 20, 20, 20 }, // 9
+    { 16, 18, 17, 15, 17, 15, 16, 19, 16, 17 }, // 10
+    { 14, 14, 15, 13, 13, 15, 16, 19, 16, 17 }, // 11
+    { 14, 14, 15, 13, 13, 13, 13, 15, 14, 14 }, // 12
+    { 14, 14, 15, 13, 13, 11, 11, 11, 12, 12 }, // 13
+    { 10, 10, 10, 11, 11, 11, 11, 11, 12, 12 }  // 14
+};
 
 static bool useGPSS     = false;
 static bool usingGPSS   = false;
@@ -136,48 +156,31 @@ static const uint8_t ttledseq[TT_SQ_LN][10] = {
     {  5,  6,  0,  5,  1,  2,  6,  1,  1,  5 },   // 5
     {  6,  7,  1,  7,  0,  2,  7,  1,  2,  7 },   // 6    bl 6
     {  7,  9,  1,  9,  1,  3,  8,  1,  3,  9 },   // 7    bl 8
-    {  8, 10,  0, 10,  0,  4,  9,  0,  3, 10 },   // 8 ok bl 10
+    {  8, 10,  0, 10,  0,  4,  9,  0,  3, 10 },   // 8  m bl 10 (26)
     {  8, 10,  0, 10,  0,  5,  9,  0,  4, 10 },   // 9
     {  8, 10,  0, 10,  0,  5,  9,  0,  5, 10 },   // 10
     {  8, 10,  0, 10,  0,  6,  9,  0,  6, 10 },   // 11
     {  8, 10,  0, 10,  0,  8,  9,  0,  7, 10 },   // 12
     {  8, 10,  0, 10,  0, 10,  9,  0,  8, 10 },   // 13
     {  8, 10,  0, 10,  0, 10,  9,  0,  9, 10 },   // 14
-    { 10, 10,  1, 10,  0, 10, 10,  0, 10, 10 },   // 15 ok bl 10
-    { 10, 10,  1, 10,  0, 10, 10,  0, 10, 10 },   // 16 ok bl 10
-    { 10, 10,  1, 10,  0, 11, 10,  0, 11, 10 },   // 17 ok
+    { 10, 10,  1, 10,  0, 10, 10,  0, 10, 10 },   // 15 m bl 10 (36)
+    { 10, 10,  1, 10,  0, 10, 10,  0, 10, 10 },   // 16 m bl 10
+    { 10, 10,  1, 10,  0, 11, 10,  0, 11, 10 },   // 17 m       (37)
     { 10, 10,  2, 10,  0, 12, 10,  0, 12, 10 },   // 18 
     { 11, 10,  3, 10,  0, 11, 10,  0, 13, 10 },   // 19 
     { 12, 10,  3, 10,  0, 12, 10,  0, 14, 10 },   // 20 
-    { 13, 10,  3, 10,  0, 12, 10,  0, 15, 10 },   // 21 ok
+    { 13, 10,  3, 10,  0, 12, 10,  0, 15, 10 },   // 21 m       (41)
     { 14, 10,  4, 10,  0, 12, 10,  0, 16, 10 },   // 22 
     { 15, 10,  4, 10,  0, 12, 10,  0, 17, 10 },   // 23 
-    { 16, 10,  4, 10,  0, 12, 10,  0, 18, 10 },   // 24 ok
-    { 19, 10,  6, 10,  0, 12, 10,  0, 20, 10 },   // 25 ok
-    { 20, 15,  7, 10,  0, 12, 15,  7, 20, 10 },   // 26 ok
-    { 20, 20, 10, 10,  5, 12, 20, 10, 20, 10 },   // 27 ok
-    { 20, 20, 13, 20, 20, 20, 20, 10, 20, 17 },   // 28 ok
+    { 16, 10,  4, 10,  0, 12, 10,  0, 18, 10 },   // 24 m       (44)
+    { 19, 10,  6, 10,  0, 12, 10,  0, 20, 10 },   // 25 m       (47)
+    { 20, 15,  7, 10,  0, 12, 15,  7, 20, 10 },   // 26 m       (n/a)
+    { 20, 20, 10, 10,  5, 12, 20, 10, 20, 10 },   // 27 m       (n/a)
+    { 20, 20, 13, 20, 20, 19, 20, 10, 20, 17 },   // 28 m       (60)
 };
 static const uint8_t seqEntry[21] = {
   //  0  1  2  3  4  5  6  7  8  9 10  11  12  13  14  15  16  17  18  19  20      baseline
       0, 1, 2, 3, 4, 5, 6, 6, 7, 7, 8, 15, 18, 19, 20, 21, 21, 22, 22, 23, 24   // index in sequ
-};
-
-static const uint8_t idle4[14][10] = {
-    {  6,  8,  6,  5,  8, 11, 11, 11, 12, 12 }, // 1
-    { 10, 10, 10, 11, 11, 11, 11, 11, 12, 12 }, // 2
-    { 14, 14, 15, 13, 13, 11, 11, 11, 12, 12 }, // 3
-    { 14, 14, 15, 13, 13, 13, 13, 15, 14, 14 }, // 4
-    { 14, 14, 15, 13, 13, 15, 16, 19, 16, 17 }, // 5
-    { 16, 18, 17, 15, 17, 15, 16, 19, 16, 17 }, // 6
-    { 16, 18, 17, 15, 17, 20, 18, 20, 20, 20 }, // 7
-    { 19, 20, 20, 17, 19, 20, 18, 20, 20, 20 }, // 8
-    { 16, 18, 17, 15, 17, 20, 18, 20, 20, 20 }, // 9
-    { 16, 18, 17, 15, 17, 15, 16, 19, 16, 17 }, // 10
-    { 14, 14, 15, 13, 13, 15, 16, 19, 16, 17 }, // 11
-    { 14, 14, 15, 13, 13, 13, 13, 15, 14, 14 }, // 12
-    { 14, 14, 15, 13, 13, 11, 11, 11, 12, 12 }, // 13
-    { 10, 10, 10, 11, 11, 11, 11, 11, 12, 12 }  // 14
 };
 
 #define TT_AMP_STEPS 16
@@ -506,7 +509,7 @@ void main_loop()
             ssActive = false;
 
             sidBaseLine = 0;
-            LMState = LMIdx = 0;
+            LMState = LMIdx = id5idx = 0;
 
             ir_remote.loop();
 
@@ -748,7 +751,7 @@ void main_loop()
                     isTTKeyHeld = isTTKeyPressed = false;
                     ssRestartTimer();
                     sa_setAmpFact(100);
-                    LMState = LMIdx = 0;
+                    LMState = LMIdx = id5idx = 0;
                 }
 
             }
@@ -880,7 +883,7 @@ void main_loop()
                     isTTKeyHeld = isTTKeyPressed = false;
                     ssRestartTimer();
                     sa_setAmpFact(100);
-                    LMState = LMIdx = 0;
+                    LMState = LMIdx = id5idx = 0;
                 }
 
             }
@@ -997,58 +1000,62 @@ static void showBaseLine(int variation, uint16_t flags)
     int bh, a = sidBaseLine, b;
     int vc = (flags & SBLF_ISTT) ? 0 : variation / 2;
 
-    if(a < 0) a = 0;
-    if(a > 19) a = 19;
-
-    b = (flags & SBLF_ISTT) ? 20 : a;
-
-    if(flags & SBLF_REPEAT) {
-        for(int i = 0; i < 10; i++) {
-            sid.drawBar(i, 0, oldIdleHeight[i]);
+    if(!(flags & SBLF_NOBL)) {
+          
+        if(a < 0) a = 0;
+        if(a > 19) a = 19;
+    
+        b = (flags & SBLF_ISTT) ? 20 : a;
+    
+        if(flags & SBLF_REPEAT) {
+            for(int i = 0; i < 10; i++) {
+                sid.drawBar(i, 0, oldIdleHeight[i]);
+            }
+        } else {
+            for(int i = 0; i < 10; i++) {
+                bh = a * (mods[b][i] + ((int)(esp_random() % variation)-vc)) / 100;
+                if(bh < 0) bh = 0;
+                if(bh > 19) bh = 19;
+                if((flags & SBLF_LM) && bh < 9) {
+                    bh = 9 + (int)(esp_random() % 4);
+                }
+                if(!(flags & SBLF_ISTT) && abs(bh - oldIdleHeight[i]) > 5) {
+                    bh = (oldIdleHeight[i] + bh) / 2;
+                }
+                if(flags & SBLF_ISTT) {
+                    if(bh > maxTTHeight[i]) bh = maxTTHeight[i];
+                }
+                sid.drawBar(i, 0, bh);
+                oldIdleHeight[i] = bh;
+            }
         }
-    } else {
-        for(int i = 0; i < 10; i++) {
-            bh = a * (mods[b][i] + ((int)(esp_random() % variation)-vc)) / 100;
-            if(bh < 0) bh = 0;
-            if(bh > 19) bh = 19;
-            if((flags & SBLF_LM) && bh < 9) {
-                bh = 9 + (int)(esp_random() % 4);
+    
+        if(flags & SBLF_ISTT) {
+            if(TTClrBarInc && !(flags & SBLF_LMTT)) {
+                sid.clearBar(TTClrBar);
+                TTClrBar += TTClrBarInc;
+                if(TTClrBar >= 10) {
+                    TTClrBar = 9;
+                    TTClrBarInc = -1;
+                }
+                if(TTClrBar < 0 && TTClrBarInc < 0) {
+                    TTClrBarInc = 1;
+                    TTClrBar = 0;
+                    TTBarCnt++;
+                    if(TTBarCnt > 0) TTBri = true;
+                }
             }
-            if(!(flags & SBLF_ISTT) && abs(bh - oldIdleHeight[i]) > 5) {
-                bh = (oldIdleHeight[i] + bh) / 2;
+            if(TTBri || (flags & SBLF_LMTT)) {
+                sid.setBrightnessDirect((esp_random() % 13) + 3);
             }
-            if(flags & SBLF_ISTT) {
-                if(bh > maxTTHeight[i]) bh = maxTTHeight[i];
+            if(flags & SBLF_LMTT) {
+                if(LMTT[TTLMIdx]) {
+                    sid.drawLetterMask(LMTT[TTLMIdx], 1, 11);   // FIXME
+                }
             }
-            sid.drawBar(i, 0, bh);
-            oldIdleHeight[i] = bh;
-        }
+        } 
+
     }
-
-    if(flags & SBLF_ISTT) {
-        if(TTClrBarInc && !(flags & SBLF_LMTT)) {
-            sid.clearBar(TTClrBar);
-            TTClrBar += TTClrBarInc;
-            if(TTClrBar >= 10) {
-                TTClrBar = 9;
-                TTClrBarInc = -1;
-            }
-            if(TTClrBar < 0 && TTClrBarInc < 0) {
-                TTClrBarInc = 1;
-                TTClrBar = 0;
-                TTBarCnt++;
-                if(TTBarCnt > 0) TTBri = true;
-            }
-        }
-        if(TTBri || (flags & SBLF_LMTT)) {
-            sid.setBrightnessDirect((esp_random() % 13) + 3);
-        }
-        if(flags & SBLF_LMTT) {
-            if(LMTT[TTLMIdx]) {
-                sid.drawLetterMask(LMTT[TTLMIdx], 1, 11);   // FIXME
-            }
-        }
-    } 
 
     if(!(flags & SBLF_SKIPSHOW)) {
         sid.show();
@@ -1066,7 +1073,25 @@ static void showIdle(bool freezeBaseLine)
 
     idleDelay2 = 800 + ((int)(esp_random() % 200) - 100);
 
-    if(useGPSS && gpsSpeed >= 0) {
+    if(idleMode == 4) {
+
+        if(now - lastChange < idleDelay)
+            return;
+          
+        lastChange = now;
+
+        idleDelay = 90;
+
+        for(int i = 0; i < 10; i++) {
+            sid.drawBarWithHeight(i, idle5[id5idx][i]);
+        }
+        id5idx++;
+        if(id5idx >= ID5_STEPS) id5idx = 0;
+        
+        sidBaseLine = 0;    // ?
+        sblFlags |= SBLF_NOBL;
+
+    } else if(useGPSS && gpsSpeed >= 0) {
         
         if(now - lastChange < 500)
             return;
@@ -1135,7 +1160,7 @@ static void showIdle(bool freezeBaseLine)
                 variation = 40;
             }
             break;
-        case 4:   // with masked text & "identity crisis" tt seq
+        case 5:   // with masked text & "identity crisis" tt seq
             idleDelay = 80;
             sblFlags |= (SBLF_LM|SBLF_SKIPSHOW);
             if(now - lastChange2 < idleDelay2) {
@@ -1257,7 +1282,7 @@ static void timeTravel(bool TCDtriggered, uint16_t P0Dur)
     } else if(usingGPSS) {
         TTcnt = TT_SQ_LN - seqEntry[sidBaseLine];
     } else {
-        if(idleMode == 4) {
+        if(idleMode == 5) {
             TTsbFlags |= SBLF_LMTT;
         }
         TTcnt = TT_SQ_LN - seqEntry[sidBaseLine];
@@ -1742,15 +1767,20 @@ static bool execute(bool isIR)
     case 1:
         if(!isIRLocked) {
             switch(inputBuffer[0] - '0') {
-            case 0:                               // *0 - *4 idle pattern (deprecated)
+            case 0:                               // *0 - *5 idle pattern (deprecated)
             case 1:
             case 2:
             case 3:
             case 4:
+            case 5:
                 temp = idleMode;
                 idleMode = inputBuffer[0] - '0';
-                if((temp != idleMode) && (idleMode == 4)) {
-                    LMState = LMIdx = 0;
+                if(temp != idleMode) {
+                    if(idleMode == 5) {
+                        LMState = LMIdx = 0;
+                    } else if(idleMode == 4) {
+                        id5idx = 0;
+                    }
                 }
                 ipachanged = true;
                 ipachgnow = now;
@@ -1762,13 +1792,17 @@ static bool execute(bool isIR)
         break;
     case 2:
         temp = atoi(inputBuffer);
-        if(temp >= 10 && temp <= 19) {            // *10-*14 idle pattern
+        if(temp >= 10 && temp <= 19) {            // *10-*15 idle pattern
             if(!isIRLocked) {
-                if(temp <= 14) {
+                if(temp <= 15) {
                     temp = idleMode;
                     idleMode = atoi(inputBuffer) - 10;
-                    if((temp != idleMode) && (idleMode == 4)) {
-                        LMState = LMIdx = 0;
+                    if(temp != idleMode) {
+                        if(idleMode == 5) {
+                            LMState = LMIdx = 0;
+                        } else if(idleMode == 4) {
+                            id5idx = 0;
+                        }
                     }
                     ipachanged = true;
                     ipachgnow = now;
@@ -1910,7 +1944,7 @@ static void span_stop(bool skipClearDisplay)
         if(skipClearDisplay) {
             sid.clearDisplayDirect();
         }
-        LMState = LMIdx = 0;
+        LMState = LMIdx = id5idx = 0;
     }
 }
 
@@ -1925,7 +1959,7 @@ static void siddly_stop()
     if(siActive) {
         si_end();
         sid.clearDisplayDirect();
-        LMState = LMIdx = 0;
+        LMState = LMIdx = id5idx = 0;
     }
 }
 
@@ -1940,7 +1974,7 @@ static void snake_stop()
     if(snActive) {
         sn_end();
         sid.clearDisplayDirect();
-        LMState = LMIdx = 0;
+        LMState = LMIdx = id5idx = 0;
     }
 }
 
@@ -1988,7 +2022,7 @@ void showWaitSequence()
 void endWaitSequence()
 {
     sid.clearDisplayDirect();
-    LMState = LMIdx = 0;
+    LMState = LMIdx = id5idx = 0;
 }
 
 void allOff()
@@ -2023,7 +2057,7 @@ void showWordSequence(const char *text, int speed)
     }
     sid.clearDisplayDirect();
     sid.setBrightness(255);
-    LMState = LMIdx = 0;
+    LMState = LMIdx = id5idx = 0;
     ir_remote.loop();     // Ignore IR received in the meantime
 }
 
@@ -2039,7 +2073,7 @@ static void fadeOutChar()
     mydelay(50, false);
     sid.clearDisplayDirect();
     sid.setBrightness(255);
-    LMState = LMIdx = 0;
+    LMState = LMIdx = id5idx = 0;
     ir_remote.loop();     // Ignore IR received in the meantime
 }
 
