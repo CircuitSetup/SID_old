@@ -35,9 +35,9 @@
 extern bool saActive;   // Read only!
 extern bool doPeaks;
 
-void sa_remove();
+#define SA_START_DELAY  1000   // Delay to skip the mic's startup noise
 
-void sa_activate();
+void sa_activate(bool init = true, unsigned long start_Delay = SA_START_DELAY);
 void sa_deactivate();
 
 int sa_setAmpFact(int newAmpFact);

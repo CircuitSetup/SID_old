@@ -31,65 +31,72 @@
  */ 
 
 #include "sid_global.h"
-
-#ifdef SID_DBG
-//#define SA_DBG_WRITEOUT
-#endif
-
 #include <Arduino.h>
 #include "src/arduinoFFT/arduinoFFT.h"
 #include <driver/i2s.h>
 #include <driver/adc.h>
 #include <soc/i2s_reg.h>
-
 #include "sid_main.h"
-#ifdef SA_DBG_WRITEOUT
-#include "sid_settings.h"
-#endif
 
-#define NUMBANDS      11
-#define DISPLAYBANDS  10
-#define LEDS_PER_BAR  20
+#define NUMBANDS      11    // Number of bands ("bins" in FFT-speak)
+#define DISPLAYBANDS  10    // Displayed number of bands
+#define LEDS_PER_BAR  20    // Height of bar
 
-#define NUMSAMPLES  1024
-#define SAMPLERATE 32000
+#define NUMSAMPLES  1024    // Size of sample block
+#define SAMPLERATE 32000    // Sampling frequency
 
-#define PEAK_HOLD    500   // ms
-#define PEAK_FALL    100   // ms
+#define PEAK_HOLD    500    // ms - Peak hold time
+#define PEAK_FALL    100    // ms - Peak fall speed
+
+//#define SA_DBG_WRITEOUT   // For debugging
 
 static const i2s_port_t I2S_PORT = I2S_NUM_0;
 
 static int32_t rawSamples[NUMSAMPLES];
-static double  vReal[NUMSAMPLES];
-static double  vImag[NUMSAMPLES];
+static FTYPE vReal[NUMSAMPLES];
+static FTYPE vImag[NUMSAMPLES];
 
-static double freqBands[NUMBANDS] = { 0 };
+static FTYPE freqBands[NUMBANDS] = { 0 };
+
+#define FQ_HIST 64
+static int histIdx = 0;
+static FTYPE freqBandsHistory[FQ_HIST][NUMBANDS] = { 0 };
+
+//static FTYPE mmaxa[NUMBANDS] = { 0 };
 
 // The frequency bands
 // First one is "garbage bin", not used for display
 static int freqSteps[NUMBANDS] = {
    //110,  200,  400,  600,  800, 1000, 2500, 3500, 5000, 7000, 9000
    // 60,  150,  250,  400,  650, 1000, 1600, 2500, 4000, 6250, 10000
-      80,  100,  150,  250,  430,  650, 1000, 2000, 4000, 7000, 10000
+      80,  100,  150,  250,  430,  600, 1000, 2000, 4000, 7000, 10000
 };
 
+// Noise threshold per band. Lower bands have more noise.
 static int minTreshold[NUMBANDS] = {
        0, 5000, 5000, 5000, 3000, 1000, 1000, 1000, 1000, 1000, 1000
 };
 
-static int     oldHeight[NUMBANDS]  = { 0 };
+static int oldHeight[DISPLAYBANDS]  = { 0 };
 
-static uint8_t       peaks[NUMBANDS + 1]  = { 0 };
-static unsigned long newPeak[NUMBANDS]    = { 0 };
-static unsigned long peakTimer[NUMBANDS]  = { 0 };
+static uint8_t       peaks[DISPLAYBANDS]     = { 0 };
+static unsigned long newPeak[DISPLAYBANDS]   = { 0 };
+static unsigned long peakTimer[DISPLAYBANDS] = { 0 };
 
 bool        saActive = false;
-bool        doPeaks = false;
 static bool sa_avail = false;
-static unsigned long lastTime = 0;
+bool        doPeaks  = false;
+static bool startFlag = false;
+static bool initFlag = false;
+static bool initDisplay = true;
+static unsigned long lastTime  = 0;
+static unsigned long lastStart = 0;
+static unsigned long startDelay = 0;
+
 int         ampFact = 100;
 
-#ifdef SA_DBG_WRITEOUT
+#if defined(SID_DBG) && defined(SA_DBG_WRITEOUT)
+#include "sid_settings.h"
 #include <SD.h>
 #include <FS.h>
 static File outFile;
@@ -140,7 +147,7 @@ static bool sa_setup()
 
     sa_avail = true;
 
-    #ifdef SA_DBG_WRITEOUT
+    #if defined(SID_DBG) && defined(SA_DBG_WRITEOUT)
     if(haveSD) {
         outFile = SD.open("/sidsa.pcm", FILE_WRITE);
         outFileOpen = true;
@@ -150,6 +157,7 @@ static bool sa_setup()
     return true;
 }
 
+#if 0   // Unused
 void sa_remove()
 {
     if(!sa_avail)
@@ -158,13 +166,22 @@ void sa_remove()
     i2s_driver_uninstall(I2S_PORT);
     sa_avail = false;
 }
+#endif
 
-static void sa_resume()
+// internal resume/stop
+
+static void sa_resume(bool initDisp, unsigned long start_Delay)
 {
     if(!sa_avail)
         sa_setup();
     else 
         i2s_start(I2S_PORT);
+
+    lastTime = lastStart = millis();
+    startFlag = true;
+    startDelay = start_Delay;
+    initFlag = false;
+    initDisplay = initDisp;
 }
 
 static void sa_stop()
@@ -172,11 +189,11 @@ static void sa_stop()
     i2s_stop(I2S_PORT);
 }
 
-void sa_activate()
-{
-    sa_resume();
+// Externally called activate/deactivate
 
-    lastTime = millis();
+void sa_activate(bool init, unsigned long start_Delay)
+{
+    sa_resume(init, start_Delay);
 
     if(sa_avail)
         saActive = true;
@@ -189,11 +206,13 @@ void sa_deactivate()
 
     saActive = false;
 
-    #ifdef SA_DBG_WRITEOUT
+    #if defined(SID_DBG) && defined(SA_DBG_WRITEOUT)
     outFile.close();
     outFileOpen = false;
     #endif
 }
+
+// Set amplification factor
 
 int sa_setAmpFact(int newAmpFact)
 {
@@ -206,11 +225,14 @@ int sa_setAmpFact(int newAmpFact)
     return old;
 }
 
+// The loop
+
 void sa_loop()
 {
     size_t bytesRead = 0;
     unsigned long now = millis();
     int mmaxi = 0, band = 0;
+    FTYPE mmax = 1.0;
     
     if(!saActive || !sa_avail)
         return;
@@ -230,7 +252,7 @@ void sa_loop()
         #endif
     }
 
-    #ifdef SA_DBG_WRITEOUT
+    #if defined(SID_DBG) && defined(SA_DBG_WRITEOUT)
     
     if(outFileOpen) {
         outFile.write((uint8_t *)&rawSamples[0], NUMSAMPLES * 4);
@@ -240,7 +262,7 @@ void sa_loop()
 
     // Convert; clear vImag
     for(int i = 0; i < NUMSAMPLES; i++) {
-        vReal[i] = (double)(rawSamples[i] / 16384); // do NOT shift; result of shifting negative integer is undefined.;
+        vReal[i] = (FTYPE)(rawSamples[i] / 16384); // do NOT shift; result of shifting negative integer is undefined
         vImag[i] = 0.0;
     }
 
@@ -251,8 +273,9 @@ void sa_loop()
     FFT.DCRemoval();
 
     // Windowing: "Rectangle" does fine for our purpose
+    // and since this does effectively nothing, skip it.
+    //FFT.Windowing(FFT_WIN_TYP_RECTANGLE, FFT_FORWARD);
     //FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-    FFT.Windowing(FFT_WIN_TYP_RECTANGLE, FFT_FORWARD);
     
     FFT.Compute(FFT_FORWARD);
     
@@ -275,60 +298,89 @@ void sa_loop()
         }
     }
 
-    // Find maximum for scaling
-    double mmax = 1.0;
     for(int i = 1; i < NUMBANDS; i++) {
-        if(mmax < freqBands[i]) mmax = freqBands[i];
+        freqBandsHistory[histIdx][i] = freqBands[i];
     }
+    histIdx++;
+    histIdx &= (FQ_HIST-1);
 
-    // No point in smoothening mmax changes; is relative
-    // to amplitude of sample block (32ms @ 1024 @ 32kHz)
-    // and therefore not in any way valid over more than one
-    // sample block.
-
-    // Convert freqBands to height factors
     for(int i = 1; i < NUMBANDS; i++) {
+        mmax = 1.0;
+        for(int j = 0; j < FQ_HIST; j++) {
+            if(mmax < freqBandsHistory[j][i]) mmax = freqBandsHistory[j][i];
+        }
         freqBands[i] /= mmax;
     }
 
     now = millis();
 
-    // Calculate bar heights
-    for(int i = 0; i < DISPLAYBANDS; i++) {
-        int height = (int)(freqBands[i+1] * (double)(LEDS_PER_BAR - 1));
+    if(startFlag) {
 
-        if(ampFact != 100) {
-            if(!height) height = 1;
-            height = height * ampFact / 100;
+        if(now - lastStart < startDelay) {
+            if(!initFlag) {
+                for(int i = 0; i < DISPLAYBANDS; i++) {
+                    peaks[i] = 0;
+                    newPeak[i] = now;
+                    peakTimer[i] = PEAK_HOLD;
+                    oldHeight[i] = 1;
+                    if(initDisplay) {
+                        sid.drawBarWithHeight(i, 1);
+                    }
+                }
+                if(initDisplay) {
+                    sid.show();
+                }
+                initFlag = true;
+            }
+        } else {
+            startFlag = false;
+            histIdx = 0;
+            for(int i = 1; i < NUMBANDS; i++) {
+                for(int j = 0; j < FQ_HIST; j++) {
+                    freqBandsHistory[j][i] = 0.0;
+                }
+            }
         }
 
-        if(height > LEDS_PER_BAR) height = LEDS_PER_BAR;
-        if(!height) height = 1;
-  
-        // Smoothen jumps in downward direction
-        if(height < oldHeight[i]) {
-            if(oldHeight[i] - height > 10) height = (oldHeight[i] + height) / 2;
-            else                           height = oldHeight[i] - 1;
-        }
+    } else {
 
-        // Now do peak
-        if(height - 1 > peaks[i]) {
-            peaks[i] = min(LEDS_PER_BAR - 1, height - 1);
-            newPeak[i] = now;
-            peakTimer[i] = PEAK_HOLD;
-        }
+        // Calculate bar heights
+        for(int i = 0; i < DISPLAYBANDS; i++) {
+            int height = (int)(freqBands[i+1] * (FTYPE)(LEDS_PER_BAR - 1));
     
-        oldHeight[i] = height;
-    }
+            if(ampFact != 100) {
+                if(!height) height = 1;
+                height = height * ampFact / 100;
+            }
+    
+            if(height > LEDS_PER_BAR) height = LEDS_PER_BAR;
+            if(!height) height = 1;
+      
+            // Smoothen jumps in downward direction
+            if(height < oldHeight[i]) {
+                if(oldHeight[i] - height > 10) height = (oldHeight[i] + height) / 2;
+                else                           height = oldHeight[i] - 1;
+            }
+    
+            // Now do peak
+            if(height - 1 > peaks[i]) {
+                peaks[i] = min(LEDS_PER_BAR - 1, height - 1);
+                newPeak[i] = now;
+                peakTimer[i] = PEAK_HOLD;
+            }
+        
+            oldHeight[i] = height;
 
-    // Draw bars & peaks
-    for(int i = 0; i < DISPLAYBANDS; i++) {
-        sid.drawBarWithHeight(i, oldHeight[i]);
-        if(doPeaks && peaks[i] > oldHeight[i] - 1) {
-            sid.drawDot(i, peaks[i]);
+            // Draw bars & peaks
+            sid.drawBarWithHeight(i, oldHeight[i]);
+            if(doPeaks && peaks[i] > oldHeight[i] - 1) {
+                sid.drawDot(i, peaks[i]);
+            }
         }
+
+        // Put result on display
+        sid.show();
     }
-    sid.show();
 
     now = millis();
 

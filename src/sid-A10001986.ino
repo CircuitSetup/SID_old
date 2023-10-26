@@ -78,6 +78,10 @@
 
 /*  Changelog
  *  
+ *  2023/10/25 (A10001986)
+ *    - SA: Make FFT in float instead of double and thereby speed it up
+ *    - SA: Redo bar scaling; tweak frequency bands
+ *    - "Disable" some lamps in tt sequence
  *  2023/10/24 (A10001986)
  *    - Switch i2c speed to 400kHz
  *    - Various fixes to (until now blindly written) Spectrum Analyzer
