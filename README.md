@@ -229,7 +229,9 @@ Other ways of triggering a time travel are available if a [Time Circuits Display
 
 ## Spectrum Analyzer
 
-The spectrum analyzer works through a built-in microphone. Is shows ten frequency bands. Sticky peaks are optional, they can be switched on/off in the Config Portal and by typing *50 followed by OK on the remote.
+The spectrum analyzer (or rather: frequency-separated vu meter) works through a built-in microphone. This microphone is located behind the right hand center hole of the enclosure.
+
+Sticky peaks are optional, they can be switched on/off in the Config Portal and by typing *50 followed by OK on the remote.
 
 ## Games
 
