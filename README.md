@@ -5,7 +5,7 @@ This repository holds the most current firmware for CircuitSetup's magnificent [
 The hardware is available [here](https://circuitsetup.us).
 
 Features include
-- various idle pattern modes
+- various idle patterns
 - [Time Travel](#time-travel) function, triggered by button, [Time Circuits Display](https://tcd.backtothefutu.re) or via [MQTT](#home-assistant--mqtt)
 - Spectrum Analyzer mode via microphone
 - [IR remote controlled](#ir-remote-control); can learn keys from custom remote
@@ -170,6 +170,10 @@ In order to only disable the supplied IR remote control, check the option **_Dis
      <tr>
      <td align="left">Idle pattern 4</td>
      <td align="left">*14&#9166;</td><td>6014</td>
+    </tr>
+   <tr>
+     <td align="left">Idle pattern 5</td>
+     <td align="left">*15&#9166;</td><td>6015</td>
     </tr>
     <tr>
      <td align="left">Idle mode</td>
