@@ -267,7 +267,7 @@ Connect GND and GPIO on the SID's "Time Travel" connector to the TCD like in the
      <td align="center">GND on "Time Travel" connector</td>
     </tr>
     <tr>
-     <td align="center">GPIO</td>
+     <td align="center">TT</td>
      <td align="center">IO13 of "IO13" connector</td>
      <td align="center">TT OUT on "Time Travel" connector</td>
     </tr>
