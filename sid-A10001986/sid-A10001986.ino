@@ -78,10 +78,13 @@
 
 /*  Changelog
  *  
+ *  2023/10/27 (A10001986)
+ *    - Make time tunnel animation (flicker) optional, purists might want to
+ *      disable it.
  *  2023/10/27 (A10001986) [1.0]
  *    - Fix MQTT idle sequence selection
  *  2023/10/26 (A10001986)
- *    - Add BTTF2 idle sequence
+ *    - Add "Universal backlot in the early 2000s" idle sequence (#4)
  *    - SA: Limit height during TT accoring to final pattern
  *  2023/10/25 (A10001986)
  *    - SA: Make FFT in float instead of double and thereby speed it up

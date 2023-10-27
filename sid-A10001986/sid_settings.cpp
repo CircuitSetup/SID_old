@@ -315,6 +315,8 @@ static bool read_settings(File configFile)
         wd |= CopyCheckValidNumParm(json["useFPO"], settings.useFPO, sizeof(settings.useFPO), 0, 1, DEF_USE_FPO);
         //wd |= CopyCheckValidNumParm(json["wait4FPOn"], settings.wait4FPOn, sizeof(settings.wait4FPOn), 0, 1, DEF_WAIT_FPO);
 
+        wd |= CopyCheckValidNumParm(json["skipTTAnim"], settings.skipTTAnim, sizeof(settings.skipTTAnim), 0, 1, DEF_SKIP_TTANIM);
+
         #ifdef SID_HAVEMQTT
         wd |= CopyCheckValidNumParm(json["useMQTT"], settings.useMQTT, sizeof(settings.useMQTT), 0, 1, 0);
         if(json["mqttServer"]) {
@@ -374,6 +376,8 @@ void write_settings()
     json["useNM"] = settings.useNM;
     json["useFPO"] = settings.useFPO;
     //json["wait4FPOn"] = settings.wait4FPOn;
+
+    json["skipTTAnim"] = settings.skipTTAnim;
 
     #ifdef SID_HAVEMQTT
     json["useMQTT"] = settings.useMQTT;

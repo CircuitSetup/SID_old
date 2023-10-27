@@ -67,16 +67,11 @@ PubSubClient mqttClient(mqttWClient);
 static const char *aco = "autocomplete='off'";
 
 WiFiManagerParameter custom_ssDelay("ssDel", "Screen saver timer (minutes; 0=off)", settings.ssTimer, 3, "type='number' min='0' max='999' autocomplete='off'", WFM_LABEL_BEFORE);
-#ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
-WiFiManagerParameter custom_SApeaks("sap", "Show peaks in Spectrum Analyzer (0=off, 1=on)", settings.SApeaks, 1, "autocomplete='off'");
-#else // -------------------- Checkbox hack: --------------
-WiFiManagerParameter custom_SApeaks("sap", "Show peaks in Spectrum Analyzer", settings.SApeaks, 1, "type='checkbox'", WFM_LABEL_AFTER);
-#endif // -------------------------------------------------
 
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
 WiFiManagerParameter custom_disDIR("dDIR", "Disable supplied IR control (0=off, 1=on)", settings.disDIR, 1, "autocomplete='off' title='Set to 1 to disable the supplied IR remote control'");
 #else // -------------------- Checkbox hack: --------------
-WiFiManagerParameter custom_disDIR("dDIR", "Disable supplied IR control", settings.disDIR, 1, "title='Check to disable the supplied IR remote control' type='checkbox'", WFM_LABEL_AFTER);
+WiFiManagerParameter custom_disDIR("dDIR", "Disable supplied IR control", settings.disDIR, 1, "title='Check to disable the supplied IR remote control' type='checkbox' style='margin-top:5px;'", WFM_LABEL_AFTER);
 #endif // -------------------------------------------------
 
 #if defined(FC_MDNS) || defined(FC_WM_HAS_MDNS)
@@ -93,7 +88,7 @@ WiFiManagerParameter custom_wifiConTimeout("wificon", "WiFi connection timeout (
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
 WiFiManagerParameter custom_TCDpresent("TCDpres", "TCD connected by wire (0=no, 1=yes)", settings.TCDpresent, 1, "autocomplete='off' title='Enable if you have a Time Circuits Display connected via wire'");
 #else // -------------------- Checkbox hack: --------------
-WiFiManagerParameter custom_TCDpresent("TCDpres", "TCD connected by wire", settings.TCDpresent, 1, "autocomplete='off' title='Check if you have a Time Circuits Display connected via wire' type='checkbox'", WFM_LABEL_AFTER);
+WiFiManagerParameter custom_TCDpresent("TCDpres", "TCD connected by wire", settings.TCDpresent, 1, "autocomplete='off' title='Check if you have a Time Circuits Display connected via wire' type='checkbox' style='margin-top:5px;'", WFM_LABEL_AFTER);
 #endif // -------------------------------------------------
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
 WiFiManagerParameter custom_noETTOL("uEtNL", "TCD signals Time Travel without 5s lead (0=no, 1=yes)", settings.noETTOLead, 1, "autocomplete='off'");
@@ -128,6 +123,17 @@ WiFiManagerParameter custom_uFPO("uFPO", "Follow TCD fake power", settings.useFP
 //#else // -------------------- Checkbox hack: --------------
 //WiFiManagerParameter custom_wFPO("wFPO", "Wait for fake power on at boot", settings.wait4FPOn, 1, "autocomplete='off' type='checkbox' style='margin-bottom:0px;'", WFM_LABEL_AFTER);
 //#endif
+
+#ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
+WiFiManagerParameter custom_sTTANI("sTTANI", "Skip time tunnel animation (0=no, 1=yes)", settings.skipTTAnim, 1, "autocomplete='off' title='Enable to skip the time tunnel animation'");
+#else // -------------------- Checkbox hack: --------------
+WiFiManagerParameter custom_sTTANI("sTTANI", "Skip time tunnel animation", settings.skipTTAnim, 1, "autocomplete='off' title='Check to skip the time tunnel animation' type='checkbox' style='margin-top:5px;'", WFM_LABEL_AFTER);
+#endif // -------------------------------------------------
+#ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
+WiFiManagerParameter custom_SApeaks("sap", "Show peaks in Spectrum Analyzer (0=off, 1=on)", settings.SApeaks, 1, "autocomplete='off'");
+#else // -------------------- Checkbox hack: --------------
+WiFiManagerParameter custom_SApeaks("sap", "Show peaks in Spectrum Analyzer", settings.SApeaks, 1, "type='checkbox'", WFM_LABEL_AFTER);
+#endif // -------------------------------------------------
 
 #ifdef SID_HAVEMQTT
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
@@ -283,9 +289,8 @@ void wifi_setup()
 
     wm.setMenu(wifiMenu, TC_MENUSIZE);
 
-    wm.addParameter(&custom_sectstart_head);// 3
+    wm.addParameter(&custom_sectstart_head);// 2
     wm.addParameter(&custom_ssDelay);
-    wm.addParameter(&custom_SApeaks);
 
     wm.addParameter(&custom_sectstart);     // 2
     wm.addParameter(&custom_disDIR);
@@ -309,6 +314,10 @@ void wifi_setup()
     wm.addParameter(&custom_uNM);
     wm.addParameter(&custom_uFPO);
     //wm.addParameter(&custom_wFPO);
+
+    wm.addParameter(&custom_sectstart);     // 3
+    wm.addParameter(&custom_sTTANI);
+    wm.addParameter(&custom_SApeaks);
 
     #ifdef SID_HAVEMQTT
     wm.addParameter(&custom_sectstart);     // 4
@@ -563,6 +572,8 @@ void wifi_loop()
             mystrcpy(settings.useFPO, &custom_uFPO);
             //mystrcpy(settings.wait4FPOn, &custom_wFPO);
 
+            mystrcpy(settings.skipTTAnim, &custom_sTTANI);
+
             #ifdef SID_HAVEMQTT
             mystrcpy(settings.useMQTT, &custom_useMQTT);
             #endif
@@ -585,6 +596,8 @@ void wifi_loop()
             strcpyCB(settings.useNM, &custom_uNM);
             strcpyCB(settings.useFPO, &custom_uFPO);
             //strcpyCB(settings.wait4FPOn, &custom_wFPO);
+
+            strcpyCB(settings.skipTTAnim, &custom_sTTANI);
 
             #ifdef SID_HAVEMQTT
             strcpyCB(settings.useMQTT, &custom_useMQTT);
@@ -983,6 +996,8 @@ void updateConfigPortalValues()
     custom_uFPO.setValue(settings.useFPO, 1);
     //custom_wFPO.setValue(settings.wait4FPOn, 1);
 
+    custom_sTTANI.setValue(settings.skipTTAnim, 1);
+
     #ifdef SID_HAVEMQTT
     custom_useMQTT.setValue(settings.useMQTT, 1);
     #endif
@@ -1004,6 +1019,8 @@ void updateConfigPortalValues()
     setCBVal(&custom_uNM, settings.useNM);
     setCBVal(&custom_uFPO, settings.useFPO);
     //setCBVal(&custom_wFPO, settings.wait4FPOn);
+
+    setCBVal(&custom_sTTANI, settings.skipTTAnim);
 
     #ifdef SID_HAVEMQTT
     setCBVal(&custom_useMQTT, settings.useMQTT);

@@ -62,6 +62,8 @@ extern uint8_t musFolderNum;
 #define DEF_USE_FPO         0     // 0: Ignore TCD fake power; 1: Follow TCD fake power
 #define DEF_WAIT_FPO        1     // 0: Don't wait for fake power on during boot, 1: Do
 
+#define DEF_SKIP_TTANIM     0     // 0: Don't skip tt anim; 1: do
+
 #define DEF_CFG_ON_SD       1     // Default: Save vol/spd/IR settings on SD card
 #define DEF_SD_FREQ         0     // SD/SPI frequency: Default 16MHz
 
@@ -86,6 +88,8 @@ struct Settings {
     char useNM[4]           = MS(DEF_USE_NM);
     char useFPO[4]          = MS(DEF_USE_FPO);
     char wait4FPOn[4]       = MS(DEF_WAIT_FPO);
+
+    char skipTTAnim[4]      = MS(DEF_SKIP_TTANIM);
 
 #ifdef SID_HAVEMQTT  
     char useMQTT[4]         = "0";

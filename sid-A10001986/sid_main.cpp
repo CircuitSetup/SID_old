@@ -77,6 +77,7 @@ uint16_t networkLead   = ETTO_LEAD;
 #define SBLF_SKIPSHOW 8
 #define SBLF_LMTT     16
 #define SBLF_NOBL     32
+#define SBLF_ANIM     64
 uint16_t              idleMode = 0;
 static int            sidBaseLine = 0;
 static unsigned long  lastChange = 0;
@@ -123,6 +124,8 @@ static bool useFPO = false;
 static bool tcdFPO = false;
 static bool wait4FPOn = true;
 static int  FPOSAMode = -1;
+
+static bool skipTTAnim = false;
 
 // Time travel status flags etc.
 bool                 TTrunning = false;  // TT sequence is running
@@ -362,6 +365,8 @@ void main_setup()
     useNM = (atoi(settings.useNM) > 0);
     useFPO = (atoi(settings.useFPO) > 0);
     wait4FPOn = (atoi(settings.wait4FPOn) > 0);
+
+    skipTTAnim = (atoi(settings.skipTTAnim) > 0);
 
     doPeaks = (atoi(settings.SApeaks) > 0);
 
@@ -994,7 +999,7 @@ static void showBaseLine(int variation, uint16_t flags)
         {  90, 90, 70, 100,  90, 110,  90,  60,  95,  80 }  // extra for TT
     };
     static const uint8_t maxTTHeight[10] = {
-        19, 19, 12, 19, 19, 19, 19,  9, 19, 16
+        19, 19, 12, 19, 19, 18, 19,  9, 19, 16
     };
 
     int bh, a = sidBaseLine, b;
@@ -1004,7 +1009,7 @@ static void showBaseLine(int variation, uint16_t flags)
           
         if(a < 0) a = 0;
         if(a > 19) a = 19;
-    
+
         b = (flags & SBLF_ISTT) ? 20 : a;
     
         if(flags & SBLF_REPEAT) {
@@ -1023,7 +1028,7 @@ static void showBaseLine(int variation, uint16_t flags)
                     bh = (oldIdleHeight[i] + bh) / 2;
                 }
                 if(flags & SBLF_ISTT) {
-                    if(bh > maxTTHeight[i]) bh = maxTTHeight[i];
+                    if(bh > maxTTHeight[i] || (!(flags & SBLF_ANIM))) bh = maxTTHeight[i];
                 }
                 sid.drawBar(i, 0, bh);
                 oldIdleHeight[i] = bh;
@@ -1031,18 +1036,20 @@ static void showBaseLine(int variation, uint16_t flags)
         }
     
         if(flags & SBLF_ISTT) {
-            if(TTClrBarInc && !(flags & SBLF_LMTT)) {
-                sid.clearBar(TTClrBar);
-                TTClrBar += TTClrBarInc;
-                if(TTClrBar >= 10) {
-                    TTClrBar = 9;
-                    TTClrBarInc = -1;
-                }
-                if(TTClrBar < 0 && TTClrBarInc < 0) {
-                    TTClrBarInc = 1;
-                    TTClrBar = 0;
-                    TTBarCnt++;
-                    if(TTBarCnt > 0) TTBri = true;
+            if(flags & SBLF_ANIM) {
+                if(TTClrBarInc && !(flags & SBLF_LMTT)) {
+                    sid.clearBar(TTClrBar);
+                    TTClrBar += TTClrBarInc;
+                    if(TTClrBar >= 10) {
+                        TTClrBar = 9;
+                        TTClrBarInc = -1;
+                    }
+                    if(TTClrBar < 0 && TTClrBarInc < 0) {
+                        TTClrBarInc = 1;
+                        TTClrBar = 0;
+                        TTBarCnt++;
+                        if(TTBarCnt > 0) TTBri = true;
+                    }
                 }
             }
             if(TTBri || (flags & SBLF_LMTT)) {
@@ -1050,7 +1057,7 @@ static void showBaseLine(int variation, uint16_t flags)
             }
             if(flags & SBLF_LMTT) {
                 if(LMTT[TTLMIdx]) {
-                    sid.drawLetterMask(LMTT[TTLMIdx], 1, 11);   // FIXME
+                    sid.drawLetterMask(LMTT[TTLMIdx], 1, 11);
                 }
             }
         } 
@@ -1270,7 +1277,7 @@ static void timeTravel(bool TCDtriggered, uint16_t P0Dur)
     TTstart = TTfUpdNow = millis();
     TTP0 = true;   // phase 0
     TTSAStopped = false;
-    TTsbFlags = 0;
+    TTsbFlags = skipTTAnim ? 0 : SBLF_ANIM;
     TTLMIdx = 0;
     
     #ifdef SID_DBG
@@ -2087,6 +2094,8 @@ void copyIRarray(uint32_t *irkeys, int index)
     }
 }
 
+// TT button
+
 static void ttkeyScan()
 {
     TTKey.scan();  // scan the tt button
@@ -2134,14 +2143,13 @@ static void ssEnd()
     ssActive = false;
 }
 
+// Prepare TT: Stop games, disable s-s
 void prepareTT()
 {
     // Prepare for time travel
     ssEnd();
     siddly_stop();
     snake_stop();
-    // ...?
-    // TODO FIXME
 }
 
 // Wakeup: Sent by TCD upon entering dest date,
