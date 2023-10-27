@@ -12,10 +12,10 @@
 #define _SID_GLOBAL_H
 
 // Version strings.
-#define SID_VERSION       "V0.48"
-#define SID_VERSION_EXTRA "OCT262023"
+#define SID_VERSION       "V1.0"
+#define SID_VERSION_EXTRA "OCT272023"
 
-#define SID_DBG              // debug output on Serial
+//#define SID_DBG              // debug output on Serial
 
 /*************************************************************************
  ***                     mDNS (Bonjour) support                        ***

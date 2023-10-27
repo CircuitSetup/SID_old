@@ -732,7 +732,7 @@ void main_loop()
                 // SA mode: reduce ampFactor gradually
 
                 if(TTSAStopped) {
-                    sa_activate(false, 100);
+                    sa_activate(false, 500);
                     TTSAStopped = false;
                 }
                 if(saActive && sa_setAmpFact(-1) > 100) {
@@ -864,7 +864,7 @@ void main_loop()
                 // SA mode: reduce ampFactor gradually
 
                 if(TTSAStopped) {
-                    sa_activate(false, 100);
+                    sa_activate(false, 500);
                     TTSAStopped = false;
                 }
                 if(saActive && sa_setAmpFact(-1) > 100) {
@@ -1373,6 +1373,22 @@ static void play_startup()
     }
 }
 
+void setIdleMode(int idleNo)
+{
+    uint16_t temp = idleMode;
+    
+    idleMode = idleNo;
+    if(temp != idleMode) {
+        if(idleMode == 5) {
+            LMState = LMIdx = 0;
+        } else if(idleMode == 4) {
+            id5idx = 0;
+        }
+    }
+    ipachanged = true;
+    ipachgnow = millis();
+}    
+
 /*
  * IR remote input handling
  */
@@ -1773,17 +1789,7 @@ static bool execute(bool isIR)
             case 3:
             case 4:
             case 5:
-                temp = idleMode;
-                idleMode = inputBuffer[0] - '0';
-                if(temp != idleMode) {
-                    if(idleMode == 5) {
-                        LMState = LMIdx = 0;
-                    } else if(idleMode == 4) {
-                        id5idx = 0;
-                    }
-                }
-                ipachanged = true;
-                ipachgnow = now;
+                setIdleMode(inputBuffer[0] - '0');
                 break;
             default:
                 doBadInp = true;
@@ -1795,17 +1801,7 @@ static bool execute(bool isIR)
         if(temp >= 10 && temp <= 19) {            // *10-*15 idle pattern
             if(!isIRLocked) {
                 if(temp <= 15) {
-                    temp = idleMode;
-                    idleMode = atoi(inputBuffer) - 10;
-                    if(temp != idleMode) {
-                        if(idleMode == 5) {
-                            LMState = LMIdx = 0;
-                        } else if(idleMode == 4) {
-                            id5idx = 0;
-                        }
-                    }
-                    ipachanged = true;
-                    ipachgnow = now;
+                    setIdleMode(temp - 10);
                 } else {
                     doBadInp = true;
                 }
