@@ -78,6 +78,11 @@
 
 /*  Changelog
  *  
+ *  2023/10/27 (A10001986) [1.0]
+ *    - Fix MQTT idle sequence selection
+ *  2023/10/26 (A10001986)
+ *    - Add BTTF2 idle sequence
+ *    - SA: Limit height during TT accoring to final pattern
  *  2023/10/25 (A10001986)
  *    - SA: Make FFT in float instead of double and thereby speed it up
  *    - SA: Redo bar scaling; tweak frequency bands

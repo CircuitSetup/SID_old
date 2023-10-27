@@ -78,6 +78,8 @@ void mydelay(unsigned long mydel, bool withIR);
 void prepareTT();
 void wakeup();
 
+void setIdleMode(int idleNo);
+
 void switch_to_idle();
 void switch_to_sa();
 

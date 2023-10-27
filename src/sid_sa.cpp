@@ -58,11 +58,12 @@ static FTYPE vImag[NUMSAMPLES];
 
 static FTYPE freqBands[NUMBANDS] = { 0 };
 
-#define FQ_HIST 64
+// 32 = 32ms * 32 = 1 sec
+// 64 = 32ms * 64 = 2 secs
+// 128 = 32ms * 128 = 4 secs
+#define FQ_HIST 128
 static int histIdx = 0;
 static FTYPE freqBandsHistory[FQ_HIST][NUMBANDS] = { 0 };
-
-//static FTYPE mmaxa[NUMBANDS] = { 0 };
 
 // The frequency bands
 // First one is "garbage bin", not used for display
@@ -75,6 +76,10 @@ static int freqSteps[NUMBANDS] = {
 // Noise threshold per band. Lower bands have more noise.
 static int minTreshold[NUMBANDS] = {
        0, 5000, 5000, 5000, 3000, 1000, 1000, 1000, 1000, 1000, 1000
+};
+
+static const uint8_t maxTTHeight[10] = {
+        20, 20, 13, 20, 20, 20, 20, 10, 20, 17
 };
 
 static int oldHeight[DISPLAYBANDS]  = { 0 };
@@ -298,12 +303,14 @@ void sa_loop()
         }
     }
 
+    // Store absolute band sums to our history table
     for(int i = 1; i < NUMBANDS; i++) {
         freqBandsHistory[histIdx][i] = freqBands[i];
     }
     histIdx++;
     histIdx &= (FQ_HIST-1);
 
+    // Find maximum in history table for scaling each bar
     for(int i = 1; i < NUMBANDS; i++) {
         mmax = 1.0;
         for(int j = 0; j < FQ_HIST; j++) {
@@ -335,9 +342,9 @@ void sa_loop()
         } else {
             startFlag = false;
             histIdx = 0;
-            for(int i = 1; i < NUMBANDS; i++) {
-                for(int j = 0; j < FQ_HIST; j++) {
-                    freqBandsHistory[j][i] = 0.0;
+            for(int i = 0; i < FQ_HIST; i++) {
+                for(int j = 1; j < NUMBANDS; j++) {
+                    freqBandsHistory[i][j] = 0.0;
                 }
             }
         }
@@ -351,6 +358,7 @@ void sa_loop()
             if(ampFact != 100) {
                 if(!height) height = 1;
                 height = height * ampFact / 100;
+                if(height > maxTTHeight[i]) height = maxTTHeight[i];
             }
     
             if(height > LEDS_PER_BAR) height = LEDS_PER_BAR;

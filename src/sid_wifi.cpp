@@ -1170,8 +1170,9 @@ static void mqttCallback(char *topic, byte *payload, unsigned int length)
       "IDLE_2",           // 3
       "IDLE_3",           // 4
       "IDLE_4",           // 5
-      "IDLE",             // 6
-      "SA",               // 7
+      "IDLE_5",           // 6
+      "IDLE",             // 7
+      "SA",               // 8
       NULL
     };
     static const char *cmdList2[] = {
@@ -1284,12 +1285,13 @@ static void mqttCallback(char *topic, byte *payload, unsigned int length)
         case 3:
         case 4:
         case 5:
-            idleMode = i - 1;
-            break;
         case 6:
-            switch_to_idle();
+            setIdleMode(i - 1);
             break;
         case 7:
+            switch_to_idle();
+            break;
+        case 8:
             switch_to_sa();
             break;
         }

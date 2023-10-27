@@ -5,7 +5,7 @@ This repository holds the most current firmware for CircuitSetup's magnificent [
 The hardware is available [here](https://circuitsetup.us).
 
 Features include
-- various idle pattern modes
+- various idle patterns
 - [Time Travel](#time-travel) function, triggered by button, [Time Circuits Display](https://tcd.backtothefutu.re) or via [MQTT](#home-assistant--mqtt)
 - Spectrum Analyzer mode via microphone
 - [IR remote controlled](#ir-remote-control); can learn keys from custom remote
@@ -171,6 +171,10 @@ In order to only disable the supplied IR remote control, check the option **_Dis
      <td align="left">Idle pattern 4</td>
      <td align="left">*14&#9166;</td><td>6014</td>
     </tr>
+   <tr>
+     <td align="left">Idle pattern 5</td>
+     <td align="left">*15&#9166;</td><td>6015</td>
+    </tr>
     <tr>
      <td align="left">Idle mode</td>
      <td align="left">*20&#9166;</td><td>6020</td>
@@ -225,7 +229,9 @@ Other ways of triggering a time travel are available if a [Time Circuits Display
 
 ## Spectrum Analyzer
 
-The spectrum analyzer works through a built-in microphone. Is shows ten frequency bands. Sticky peaks are optional, they can be switched on/off in the Config Portal and by typing *50 followed by OK on the remote.
+The spectrum analyzer (or rather: frequency-separated vu meter) works through a built-in microphone. This microphone is located behind the right hand center hole of the enclosure.
+
+Sticky peaks are optional, they can be switched on/off in the Config Portal and by typing *50 followed by OK on the remote.
 
 ## Games
 
@@ -263,7 +269,7 @@ Connect GND and GPIO on the SID's "Time Travel" connector to the TCD like in the
      <td align="center">GND on "Time Travel" connector</td>
     </tr>
     <tr>
-     <td align="center">GPIO</td>
+     <td align="center">TT</td>
      <td align="center">IO13 of "IO13" connector</td>
      <td align="center">TT OUT on "Time Travel" connector</td>
     </tr>
