@@ -56,12 +56,11 @@ extern uint8_t musFolderNum;
 #define DEF_NO_ETTO_LEAD    0     // Default: 0: TCD signals TT with ETTO_LEAD lead time; 1 without
 
 #define DEF_TCD_IP          ""    // TCD ip address for networked polling
-#define DEF_WAIT_FOR_TCD    0     // 0: Boot normally  1: Delay WiFi setup for 30 seconds (to wait for TCD if powered up simultaniously)
 #define DEF_USE_GPSS        0     // 0: Ignore GPS speed; 1: Use it for chase speed
 #define DEF_USE_NM          0     // 0: Ignore TCD night mode; 1: Follow TCD night mode
 #define DEF_USE_FPO         0     // 0: Ignore TCD fake power; 1: Follow TCD fake power
-#define DEF_WAIT_FPO        1     // 0: Don't wait for fake power on during boot, 1: Do
 
+#define DEF_STRICT          1     // 0: Allow random diviations from movie patterns; 1: no not
 #define DEF_SKIP_TTANIM     0     // 0: Don't skip tt anim; 1: do
 
 #define DEF_CFG_ON_SD       1     // Default: Save vol/spd/IR settings on SD card
@@ -83,12 +82,11 @@ struct Settings {
     char noETTOLead[4]      = MS(DEF_NO_ETTO_LEAD);
 
     char tcdIP[32]          = DEF_TCD_IP;
-    //char wait4TCD[4]        = MS(DEF_WAIT_FOR_TCD);
     char useGPSS[4]         = MS(DEF_USE_GPSS);
     char useNM[4]           = MS(DEF_USE_NM);
     char useFPO[4]          = MS(DEF_USE_FPO);
-    char wait4FPOn[4]       = MS(DEF_WAIT_FPO);
 
+    char strictMode[4]      = MS(DEF_STRICT);       // saved, but overruled by idlePat config file
     char skipTTAnim[4]      = MS(DEF_SKIP_TTANIM);
 
 #ifdef SID_HAVEMQTT  

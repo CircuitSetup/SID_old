@@ -47,6 +47,7 @@ bool wifiIsOn();
 void wifiStartCP();
 
 void updateConfigPortalValues();
+void updateConfigPortalStrictValue();
 
 bool wifi_getIP(uint8_t& a, uint8_t& b, uint8_t& c, uint8_t& d);
 bool isIp(char *str);

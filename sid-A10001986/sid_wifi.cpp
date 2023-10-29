@@ -98,11 +98,6 @@ WiFiManagerParameter custom_noETTOL("uEtNL", "TCD signals Time Travel without 5s
 
 WiFiManagerParameter custom_bttfnHint("<div style='margin:0px 0px 10px 0px;padding:0px'>Wireless communication (BTTF-Network)</div>");
 WiFiManagerParameter custom_tcdIP("tcdIP", "IP address of TCD", settings.tcdIP, 15, "pattern='[0-9\\.]+' placeholder='Example: 192.168.4.1'");
-//#ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
-//WiFiManagerParameter custom_wait4TCD("w4TCD", "Wait for TCD-WiFi (0=no, 1=yes)<br><span style='font-size:80%'>Enable this if TCD acts as WiFi-AP for SID, and you power-up TCD and SID simultaneously (as is typical in car setups)</span>", settings.wait4TCD, 1, "autocomplete='off' title='Enable if you power-up TCD and SID simultaneously to delay WiFi-connection to TCD'");
-//#else // -------------------- Checkbox hack: --------------
-//WiFiManagerParameter custom_wait4TCD("w4TCD", "Wait for TCD-WiFi<br><span style='font-size:80%'>Check this if TCD acts as WiFi-AP for SID, and you power-up TCD and SID simultaneously (as is typical in car setups)</span>", settings.wait4TCD, 1, "autocomplete='off' title='Check if you power-up TCD and SID simultaneously to delay WiFi-connection to TCD' type='checkbox'", WFM_LABEL_AFTER);
-//#endif // -------------------------------------------------
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
 WiFiManagerParameter custom_uGPS("uGPS", "Adapt pattern to GPS speed (0=no, 1=yes)<br><span style='font-size:80%'>GPS speed, if available from TCD, will overrule IR remote</span>", settings.useGPSS, 1, "autocomplete='off'");
 #else // -------------------- Checkbox hack: --------------
@@ -118,16 +113,16 @@ WiFiManagerParameter custom_uFPO("uFPO", "Follow TCD fake power (0=no, 1=yes)", 
 #else // -------------------- Checkbox hack: --------------
 WiFiManagerParameter custom_uFPO("uFPO", "Follow TCD fake power", settings.useFPO, 1, "autocomplete='off' type='checkbox' style='margin-bottom:0px;'", WFM_LABEL_AFTER);
 #endif // -------------------------------------------------
-//#ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
-//WiFiManagerParameter custom_wFPO("wFPO", "Wait for fake power on at boot (0=no, 1=yes)", settings.wait4FPOn, 1, "autocomplete='off'");
-//#else // -------------------- Checkbox hack: --------------
-//WiFiManagerParameter custom_wFPO("wFPO", "Wait for fake power on at boot", settings.wait4FPOn, 1, "autocomplete='off' type='checkbox' style='margin-bottom:0px;'", WFM_LABEL_AFTER);
-//#endif
 
+#ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
+WiFiManagerParameter custom_sStrict("sStrict", "Adhere strictly to movie patterns (0=no, 1=yes)<br><span style='font-size:80%'>Check to strictly show movie patterns in idle modes 0-3 and with GPS speed; uncheck if variations are allowed.</span>", settings.strictMode, 1, "autocomplete='off'");
+#else // -------------------- Checkbox hack: --------------
+WiFiManagerParameter custom_sStrict("sStrict", "Adhere strictly to movie patterns<br><span style='font-size:80%'>Check to strictly show movie patterns in idle modes 0-3 and with GPS speed; uncheck if variations are allowed.</span>", settings.strictMode, 1, "autocomplete='off' type='checkbox' style='margin-top:5px;'", WFM_LABEL_AFTER);
+#endif // -------------------------------------------------
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
 WiFiManagerParameter custom_sTTANI("sTTANI", "Skip time tunnel animation (0=no, 1=yes)", settings.skipTTAnim, 1, "autocomplete='off' title='Enable to skip the time tunnel animation'");
 #else // -------------------- Checkbox hack: --------------
-WiFiManagerParameter custom_sTTANI("sTTANI", "Skip time tunnel animation", settings.skipTTAnim, 1, "autocomplete='off' title='Check to skip the time tunnel animation' type='checkbox' style='margin-top:5px;'", WFM_LABEL_AFTER);
+WiFiManagerParameter custom_sTTANI("sTTANI", "Skip time tunnel animation", settings.skipTTAnim, 1, "autocomplete='off' title='Check to skip the time tunnel animation' type='checkbox'", WFM_LABEL_AFTER);
 #endif // -------------------------------------------------
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
 WiFiManagerParameter custom_SApeaks("sap", "Show peaks in Spectrum Analyzer (0=off, 1=on)", settings.SApeaks, 1, "autocomplete='off'");
@@ -309,13 +304,12 @@ void wifi_setup()
     wm.addParameter(&custom_sectstart);     // 7 (8)
     wm.addParameter(&custom_bttfnHint);
     wm.addParameter(&custom_tcdIP);
-    //wm.addParameter(&custom_wait4TCD);
     wm.addParameter(&custom_uGPS);
     wm.addParameter(&custom_uNM);
     wm.addParameter(&custom_uFPO);
-    //wm.addParameter(&custom_wFPO);
 
-    wm.addParameter(&custom_sectstart);     // 3
+    wm.addParameter(&custom_sectstart);     // 4
+    wm.addParameter(&custom_sStrict);
     wm.addParameter(&custom_sTTANI);
     wm.addParameter(&custom_SApeaks);
 
@@ -368,9 +362,7 @@ void wifi_setup()
         }
     }
 
-    //if(!atoi(settings.wait4TCD)) {
-        wifi_setup2();
-    //}
+    wifi_setup2();
 }
 
 void wifi_setup2()
@@ -531,6 +523,19 @@ void wifi_loop()
 
             int temp;
 
+            // Save "strict" setting
+            #ifdef TC_NOCHECKBOXES // --------- Plain text boxes:
+            mystrcpy(settings.strictMode, &custom_sStrict);
+            #else
+            strcpyCB(settings.strictMode, &custom_sStrict);
+            #endif
+            if(settings.strictMode[0] == '1') {
+                strictMode = true;
+            } else if(settings.strictMode[0] == '0') {
+                strictMode = false;
+            }
+            saveIdlePat();
+
             mystrcpy(settings.ssTimer, &custom_ssDelay);
 
             strcpytrim(settings.hostName, custom_hostName.getValue(), true);
@@ -566,11 +571,9 @@ void wifi_loop()
             mystrcpy(settings.TCDpresent, &custom_TCDpresent);
             mystrcpy(settings.noETTOLead, &custom_noETTOL);
 
-            //mystrcpy(settings.wait4TCD, &custom_wait4TCD);
             mystrcpy(settings.useGPSS, &custom_uGPS);
             mystrcpy(settings.useNM, &custom_uNM);
             mystrcpy(settings.useFPO, &custom_uFPO);
-            //mystrcpy(settings.wait4FPOn, &custom_wFPO);
 
             mystrcpy(settings.skipTTAnim, &custom_sTTANI);
 
@@ -591,11 +594,9 @@ void wifi_loop()
             strcpyCB(settings.TCDpresent, &custom_TCDpresent);
             strcpyCB(settings.noETTOLead, &custom_noETTOL);
 
-            //strcpyCB(settings.wait4TCD, &custom_wait4TCD);
             strcpyCB(settings.useGPSS, &custom_uGPS);
             strcpyCB(settings.useNM, &custom_uNM);
             strcpyCB(settings.useFPO, &custom_uFPO);
-            //strcpyCB(settings.wait4FPOn, &custom_wFPO);
 
             strcpyCB(settings.skipTTAnim, &custom_sTTANI);
 
@@ -990,11 +991,9 @@ void updateConfigPortalValues()
     custom_TCDpresent.setValue(settings.TCDpresent, 1);
     custom_noETTOL.setValue(settings.noETTOLead, 1);
 
-    //custom_wait4TCD.setValue(settings.wait4TCD, 1);
     custom_uGPS.setValue(settings.useGPSS, 1);
     custom_uNM.setValue(settings.useNM, 1);
     custom_uFPO.setValue(settings.useFPO, 1);
-    //custom_wFPO.setValue(settings.wait4FPOn, 1);
 
     custom_sTTANI.setValue(settings.skipTTAnim, 1);
 
@@ -1014,11 +1013,9 @@ void updateConfigPortalValues()
     setCBVal(&custom_TCDpresent, settings.TCDpresent);
     setCBVal(&custom_noETTOL, settings.noETTOLead);
 
-    //setCBVal(&custom_wait4TCD, settings.wait4TCD);
     setCBVal(&custom_uGPS, settings.useGPSS);
     setCBVal(&custom_uNM, settings.useNM);
     setCBVal(&custom_uFPO, settings.useFPO);
-    //setCBVal(&custom_wFPO, settings.wait4FPOn);
 
     setCBVal(&custom_sTTANI, settings.skipTTAnim);
 
@@ -1029,7 +1026,19 @@ void updateConfigPortalValues()
     setCBVal(&custom_CfgOnSD, settings.CfgOnSD);
     //setCBVal(&custom_sdFrq, settings.sdFreq);
 
-    #endif // ---------------------------------------------    
+    #endif // ---------------------------------------------
+
+    updateConfigPortalStrictValue();
+}
+
+void updateConfigPortalStrictValue()
+{
+    strcpy(settings.strictMode, strictMode ? "1" : "0");
+    #ifdef PG_NOCHECKBOXES  // Standard text boxes: -------
+    custom_sStrict.setValue(settings.strictMode, 1);
+    #else   // For checkbox hack --------------------------
+    setCBVal(&custom_sStrict, settings.strictMode);
+    #endif // ---------------------------------------------
 }
 
 bool wifi_getIP(uint8_t& a, uint8_t& b, uint8_t& c, uint8_t& d)
