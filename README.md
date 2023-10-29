@@ -4,6 +4,8 @@ This repository holds the most current firmware for CircuitSetup's magnificent [
 
 The hardware is available [here](https://circuitsetup.us).
 
+![mysid](https://github.com/realA10001986/SID/assets/76924199/050caba4-a881-44bd-9a9b-5db3da578328)
+
 Features include
 - various idle patterns
 - [Time Travel](#time-travel) function, triggered by button, [Time Circuits Display](https://tcd.backtothefutu.re) or via [MQTT](#home-assistant--mqtt)
