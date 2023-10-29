@@ -65,7 +65,7 @@ A full reference of the Config Portal is [here](#appendix-a-the-config-portal).
 
 ## Basic Operation
 
-When the SID is idle, it shows an idle pattern. There are alternative idle patterns to choose from, selected by *10OK through *15OK on the remote, or via MQTT. If set through the IR remote and if an SD card is inserted, the setting will be persistent accross reboots.
+When the SID is idle, it shows an idle pattern. There are alternative idle patterns to choose from, selected by *10OK through *15OK on the remote, or via MQTT. If an SD card is inserted, the setting will be persistent accross reboots.
 
 If the option **_Adhere strictly to movie patterns_** is set (which is the default), the idle patterns #0 through #3 will only use patterns extracted from the movies (plus some interpolations); the same goes for when GPS speed is used. If this option is unset, random variations are shown, which is less boring, but also less accurate.
 
