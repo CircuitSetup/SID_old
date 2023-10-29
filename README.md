@@ -476,7 +476,7 @@ If this option is checked, and your TCD is equipped with a fake power switch, th
 
 ##### &#9654; Adhere strictly to movie patterns
 
-If this is set, in idle modes 0-3 as well as when using GPS speed, only patterns which were extracted from the movies (plus some interpolations) are shown. If this option is unset, random variations will be shown, which is less accurate, but also less monotonous. Purists will want this option to be set, which is also the default.
+If this is set, in idle modes 0-3 as well as when using GPS speed, only patterns which were extracted from the movies (plus some interpolations) are shown. If this option is unset, random variations will be shown, which is less accurate, but also less monotonous. Purists will want this option to be set, which is also the default. This option can also be changed by typing *50 followed by OK on the IR remote control.
 
 ##### &#9654; Skip time tunnel animation
 
