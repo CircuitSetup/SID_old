@@ -176,7 +176,7 @@ In order to only disable the supplied IR remote control, check the option **_Dis
      <td align="left">*15&#9166;</td><td>6015</td>
     </tr>
     <tr>
-     <td align="left">Idle mode</td>
+     <td align="left">Switch to idle mode</td>
      <td align="left">*20&#9166;</td><td>6020</td>
     </tr>
     <tr>
@@ -192,8 +192,12 @@ In order to only disable the supplied IR remote control, check the option **_Dis
      <td align="left">*23&#9166;</td><td>6023</td>
     </tr>
     <tr>
-     <td align="left">Enable/disable peaks in Spectrum Analyzer</td>
+     <td align="left">Enable/disable "<a href="#">strictly movie patterns</a>"</td>
      <td align="left">*50&#9166;</td><td>6050</td>
+    </tr>
+   <tr>
+     <td align="left">Enable/disable peaks in Spectrum Analyzer</td>
+     <td align="left">*51&#9166;</td><td>6051</td>
     </tr>
     <tr>
      <td align="left"><a href="#locking-ir-control">Disable/Enable</a> IR remote commands</td>
@@ -396,10 +400,6 @@ The Screen Saver, when active, disables all LEDs, until
 - the time travel button is briefly pressed (the first press when the screen saver is active will not trigger a time travel),
 - on a connected TCD, a destination date is entered (only if TCD is wirelessly connected) or a time travel event is triggered (also when wired).
 
-##### &#9654; Show peaks in Spectrum Analyzer
-
-This selects the boot-up setting for showing or not showing the peaks in the Spectrum Analyzer. Can be changed anytime by typing *50 followed by OK on the IR remote control.
-
 #### Hardware configuration settings
 
 ##### &#9654; Disable supplied IR remote control
@@ -469,6 +469,20 @@ If this option is checked, and your TCD goes into night mode, the SID will activ
 ##### &#9654; Follow TCD fake power
 
 If this option is checked, and your TCD is equipped with a fake power switch, the SID will also fake-power up/down. If fake power is off, no LED is active and the SID will ignore all input from buttons, knobs and the IR control.
+
+#### Visual options
+
+##### &#9654; Adhere strictly to movie patterns
+
+If this is set, in idle modes 0-3 as well as when using GPS speed, only patterns which were extracted from the movies (plus some interpolations) are shown. If this option is unset, random variations will be shown, which is less accurate, but also less monotonous. Purists will want this option to be set, which is also the default.
+
+##### &#9654; Skip time tunnel animation
+
+When set, the time travel sequence will not be animated (no flicker, no "moving bar"). Purists will want this option to be set; the default is unset.
+
+##### &#9654; Show peaks in Spectrum Analyzer
+
+This selects the boot-up setting for showing or not showing the peaks in the Spectrum Analyzer. Can be changed anytime by typing *51 followed by OK on the IR remote control.
 
 #### Home Assistant / MQTT settings
 
