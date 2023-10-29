@@ -310,9 +310,9 @@ The SID supports the MQTT protocol version 3.1.1 for the following features:
 
 The SID can - to a some extent - be controlled through messages sent to topic **bttf/sid/cmd**. Support commands are
 - TIMETRAVEL: Start a [time travel](#time-travel)
-- IDLE: Select idle mode
+- IDLE: Switch to idle mode
 - SA: Start spectrum analyzer
-- IDLE_0, IDLE_1, IDLE_2, IDLE_3, IDLE_4: Select idle pattern
+- IDLE_0, IDLE_1, IDLE_2, IDLE_3, IDLE_4, IDLE_5: Select idle pattern
 
 ### Receive commands from Time Circuits Display
 
