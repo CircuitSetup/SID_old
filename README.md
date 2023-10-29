@@ -194,7 +194,7 @@ In order to only disable the supplied IR remote control, check the option **_Dis
      <td align="left">*23&#9166;</td><td>6023</td>
     </tr>
     <tr>
-     <td align="left">Enable/disable "<a href="#">strictly movie patterns</a>"</td>
+     <td align="left">Enable/disable "<a href="#-adhere-strictly-to-movie-patterns">strictly movie patterns</a>"</td>
      <td align="left">*50&#9166;</td><td>6050</td>
     </tr>
    <tr>
