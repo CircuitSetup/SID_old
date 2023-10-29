@@ -7,8 +7,8 @@ The hardware is available [here](https://circuitsetup.us).
 Features include
 - various idle patterns
 - [Time Travel](#time-travel) function, triggered by button, [Time Circuits Display](https://tcd.backtothefutu.re) or via [MQTT](#home-assistant--mqtt)
-- Spectrum Analyzer mode via microphone
 - [IR remote controlled](#ir-remote-control); can learn keys from custom remote
+- Spectrum Analyzer mode via microphone
 - Advanced network-accessible [Config Portal](#the-config-portal) for setup with mDNS support for easy access (http://sid.local, hostname configurable)
 - Wireless communication with Time Circuits Display ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, alarm, chase speed, night mode, fake power and remote control through TCD keypad
 - [Home Assistant](#home-assistant--mqtt) (MQTT 3.1.1) support
@@ -67,11 +67,11 @@ A full reference of the Config Portal is [here](#appendix-a-the-config-portal).
 
 When the SID is idle, it shows an idle pattern. There are alternative idle patterns to choose from, selected by *10OK through *15OK on the remote, or via MQTT. If an SD card is inserted, the setting will be persistent accross reboots.
 
-If the option **_Adhere strictly to movie patterns_** is set (which is the default), the idle patterns #0 through #3 will only use patterns extracted from the movies (plus some interpolations); the same goes for when GPS speed is used. If this option is unset, random variations are shown, which is less boring, but also less accurate.
+If the option **_Adhere strictly to movie patterns_** is set (which is the default), the idle patterns #0 through #3 will only use patterns extracted from the movies (plus some interpolations); the same goes for when [GPS speed](#bttf-network-bttfn) is used. If this option is unset, random variations are shown, which is less boring, but also less accurate.
 
-For the options to trigger a time travel, see [here](#time-travel).
+For ways to trigger a time travel, see [here](#time-travel).
 
-The main control device is the supplied IR remote control.  If a TCD is connected through [BTTF-Network](#bttf-network-bttfn), the SID can also be controlled through the TCD's keypad.
+The main control device is the supplied IR remote control. If a TCD is connected through [BTTF-Network](#bttf-network-bttfn), the SID can also be controlled through the TCD's keypad.
 
 ### IR remote control
 
