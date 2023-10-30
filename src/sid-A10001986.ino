@@ -78,10 +78,24 @@
 
 /*  Changelog
  *  
+ *  2023/10/29 (A10001986)
+ *    - Add "Adhere strictly to movie patterns" option, which is ON by default.
+ *      If set, only parts of the movie-extracted time travel sequence (with
+ *      interpolations) are shown when idle (modes 0-3) and when using GPS 
+ *      speed. If unset, random variations will be shown. This is less boring, 
+ *      but also less authentic.
+ *      This option can be changed in the CP, and by *50OK (6050). If an SD card
+ *      is present, every change will be saved. If no SD card is present, only
+ *      the setting from the CP will be persistent.
+ *    - Change command sequence for SA peaks to *51OK (6051).
+ *    - Fix saving idle mode #5
+ *  2023/10/27 (A10001986)
+ *    - Make time tunnel animation (flicker) optional, purists might want to
+ *      disable it.
  *  2023/10/27 (A10001986) [1.0]
  *    - Fix MQTT idle sequence selection
  *  2023/10/26 (A10001986)
- *    - Add BTTF2 idle sequence
+ *    - Add "Universal backlot in the early 2000s" idle sequence (#4)
  *    - SA: Limit height during TT accoring to final pattern
  *  2023/10/25 (A10001986)
  *    - SA: Make FFT in float instead of double and thereby speed it up

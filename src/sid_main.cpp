@@ -71,14 +71,26 @@ bool networkAbort      = false;
 bool networkAlarm      = false;
 uint16_t networkLead   = ETTO_LEAD;
 
+#define SID_IDLE_0    0
+#define SID_IDLE_1    1
+#define SID_IDLE_2    2
+#define SID_IDLE_3    3
+#define SID_IDLE_BL   4   // "backlot mode"
+#define SID_IDLE_IDC  5   // text / "identity crisis"
+
 #define SBLF_REPEAT   1
 #define SBLF_ISTT     2
 #define SBLF_LM       4
 #define SBLF_SKIPSHOW 8
 #define SBLF_LMTT     16
 #define SBLF_NOBL     32
+#define SBLF_ANIM     64
+#define SBLF_STRICT   128
 uint16_t              idleMode = 0;
+bool                  strictMode = true;
 static int            sidBaseLine = 0;
+static int            strictBaseLine = 0;
+static bool           blWayup = true;
 static unsigned long  lastChange = 0;
 static unsigned long  idleDelay = 800;
 static uint8_t        oldIdleHeight[10] = { 
@@ -121,8 +133,9 @@ static bool tcdNM = false;
 bool        sidNM = false;
 static bool useFPO = false;
 static bool tcdFPO = false;
-static bool wait4FPOn = true;
 static int  FPOSAMode = -1;
+
+static bool skipTTAnim = false;
 
 // Time travel status flags etc.
 bool                 TTrunning = false;  // TT sequence is running
@@ -145,17 +158,72 @@ static uint16_t      TTsbFlags = 0;
 static int           TTLMIdx = 0;
 static bool          TTLMTrigger = false;
 
+#define TT_SQF_LN 51
+static const uint8_t ttledseqfull[TT_SQF_LN][10] = {
+    {  1,  0,  0,  4,  0,  0,  0,  0,  0,  0 },
+    {  2,  1,  0,  4,  0,  0,  0,  0,  0,  0 },
+    {  3,  2,  0,  5,  0,  0,  0,  0,  0,  0 },
+    {  4,  2,  0,  6,  0,  0,  0,  0,  0,  0 },
+    {  4,  3,  0,  6,  0,  0,  0,  0,  0,  0 },
+    {  4,  3,  0,  7,  0,  0,  0,  0,  0,  0 },
+    {  4,  4,  0,  7,  0,  0,  0,  0,  0,  0 },
+    {  4,  4,  0,  8,  0,  0,  0,  0,  0,  0 },
+    {  4,  5,  0,  9,  0,  0,  0,  0,  0,  0 },
+    {  4,  5,  0,  9,  0,  1,  0,  0,  0,  0 }, // 10
+    {  5,  5,  0,  9,  0,  1,  0,  0,  0,  0 },
+    {  5,  6,  0, 10,  0,  1,  0,  0,  0,  0 },
+    {  5,  7,  0, 10,  0,  1,  0,  0,  0,  1 },
+    {  5,  8,  0, 10,  0,  1,  0,  0,  0,  2 },
+    {  6,  9,  0, 10,  0,  2,  0,  0,  0,  3 },
+    {  6,  9,  0, 10,  0,  2,  1,  0,  0,  4 },
+    {  6,  9,  0, 10,  0,  3,  1,  0,  0,  5 },
+    {  6,  9,  0, 10,  0,  3,  2,  0,  0,  6 },
+    {  6,  9,  0, 10,  0,  3,  3,  0,  0,  7 },
+    {  6,  9,  0, 10,  0,  3,  4,  0,  0,  8 }, // 20
+    {  6,  9,  0, 10,  0,  3,  4,  0,  0,  9 },
+    {  7, 10,  0, 10,  0,  3,  4,  0,  0,  9 },
+    {  7, 10,  0, 10,  0,  4,  5,  0,  1,  9 },
+    {  8, 10,  0, 10,  0,  4,  6,  0,  1,  9 },
+    {  8, 10,  0, 10,  0,  4,  7,  0,  2,  9 },
+    {  8, 10,  0, 10,  0,  4,  8,  0,  2, 10 },
+    {  8, 10,  0, 10,  0,  4,  8,  0,  3, 10 },
+    {  8, 10,  0, 10,  0,  4,  9,  0,  3, 10 },
+    {  8, 10,  0, 10,  0,  4, 10,  0,  3, 10 },
+    {  9, 10,  0, 10,  0,  4, 10,  0,  4, 10 }, // 30
+    {  9, 10,  0, 10,  0,  5, 10,  0,  5, 10 },
+    {  9, 10,  0, 10,  0,  6, 10,  0,  6, 10 },
+    {  9, 10,  0, 10,  0,  7, 10,  0,  7, 10 },
+    { 10, 10,  0, 10,  0,  8, 10,  0,  8, 10 },
+    { 10, 10,  0, 10,  0,  9, 10,  0,  9, 10 },
+    { 10, 10,  1, 10,  0, 10, 10,  0, 10, 10 },
+    { 10, 10,  1, 10,  0, 11, 10,  0, 11, 10 },
+    { 10, 10,  2, 10,  0, 12, 10,  0, 12, 10 },
+    { 11, 10,  2, 10,  0, 12, 10,  0, 13, 10 },
+    { 12, 10,  3, 10,  0, 12, 10,  0, 14, 10 }, // 40
+    { 13, 10,  3, 10,  0, 12, 10,  0, 15, 10 },
+    { 14, 10,  3, 10,  0, 12, 10,  0, 16, 10 },
+    { 15, 10,  4, 10,  0, 12, 10,  0, 17, 10 },
+    { 16, 10,  4, 10,  0, 12, 10,  0, 18, 10 },
+    { 17, 10,  4, 10,  0, 12, 10,  0, 19, 10 },
+    { 18, 10,  6, 10,  0, 12, 10,  0, 20, 10 },
+    { 19, 10,  6, 10,  0, 12, 10,  0, 20, 10 },
+    { 19, 11,  6, 10,  0, 12, 11,  0, 20, 10 },   // 48
+    { 20, 15,  7, 10,  0, 12, 15,  0, 20, 10 },   // 51
+    { 20, 20, 10, 10,  5, 12, 20,  6, 20, 10 },   // 55-ish
+    { 20, 20, 13, 20, 20, 19, 20, 10, 20, 17 }    // 60 - tt
+};
+
 #define TT_SQ_LN 29
 static const uint8_t ttledseq[TT_SQ_LN][10] = {
 //     1   2   3   4   5   6   7   8   9  10
-    {  0,  1,  1,  0,  0,  0,  0,  0,  0,  0 },   // 0
-    {  1,  2,  0,  2,  1,  0,  2,  0,  1,  1 },   // 1
-    {  2,  3,  1,  2,  2,  1,  1,  0,  1,  2 },   // 2
-    {  3,  4,  2,  3,  1,  1,  3,  0,  2,  3 },   // 3
-    {  4,  5,  1,  3,  2,  1,  4,  0,  2,  4 },   // 4
-    {  5,  6,  0,  5,  1,  2,  6,  1,  1,  5 },   // 5
-    {  6,  7,  1,  7,  0,  2,  7,  1,  2,  7 },   // 6    bl 6
-    {  7,  9,  1,  9,  1,  3,  8,  1,  3,  9 },   // 7    bl 8
+    {  0,  1,  0,  0,  0,  0,  0,  0,  0,  0 },   // 0
+    {  1,  2,  0,  2,  0,  0,  1,  0,  1,  1 },   // 1
+    {  2,  3,  0,  2,  0,  1,  2,  0,  1,  2 },   // 2
+    {  3,  4,  0,  3,  0,  1,  3,  0,  2,  3 },   // 3
+    {  4,  5,  0,  3,  0,  1,  4,  0,  2,  4 },   // 4
+    {  5,  6,  0,  5,  0,  2,  6,  0,  2,  5 },   // 5
+    {  6,  7,  0,  7,  0,  2,  7,  0,  2,  7 },   // 6    bl 6
+    {  7,  9,  0,  9,  0,  3,  8,  0,  3,  9 },   // 7    bl 8
     {  8, 10,  0, 10,  0,  4,  9,  0,  3, 10 },   // 8  m bl 10 (26)
     {  8, 10,  0, 10,  0,  5,  9,  0,  4, 10 },   // 9
     {  8, 10,  0, 10,  0,  5,  9,  0,  5, 10 },   // 10
@@ -166,7 +234,7 @@ static const uint8_t ttledseq[TT_SQ_LN][10] = {
     { 10, 10,  1, 10,  0, 10, 10,  0, 10, 10 },   // 15 m bl 10 (36)
     { 10, 10,  1, 10,  0, 10, 10,  0, 10, 10 },   // 16 m bl 10
     { 10, 10,  1, 10,  0, 11, 10,  0, 11, 10 },   // 17 m       (37)
-    { 10, 10,  2, 10,  0, 12, 10,  0, 12, 10 },   // 18 
+    { 10, 10,  2, 10,  0, 11, 10,  0, 12, 10 },   // 18 
     { 11, 10,  3, 10,  0, 11, 10,  0, 13, 10 },   // 19 
     { 12, 10,  3, 10,  0, 12, 10,  0, 14, 10 },   // 20 
     { 13, 10,  3, 10,  0, 12, 10,  0, 15, 10 },   // 21 m       (41)
@@ -353,7 +421,8 @@ void main_setup()
 
     // Load settings
     loadBrightness();
-    loadIdlePat();
+    loadIdlePat();                    // load idleMode and strictMode
+    updateConfigPortalStrictValue();  // Update current CP value
     loadIRLock();
 
     // Other options
@@ -361,7 +430,8 @@ void main_setup()
     useGPSS = (atoi(settings.useGPSS) > 0);
     useNM = (atoi(settings.useNM) > 0);
     useFPO = (atoi(settings.useFPO) > 0);
-    wait4FPOn = (atoi(settings.wait4FPOn) > 0);
+
+    skipTTAnim = (atoi(settings.skipTTAnim) > 0);
 
     doPeaks = (atoi(settings.SApeaks) > 0);
 
@@ -415,7 +485,7 @@ void main_setup()
     // If "Follow TCD fake power" is set,
     // stay silent and dark
 
-    if(useBTTFN && useFPO && wait4FPOn && (WiFi.status() == WL_CONNECTED)) {
+    if(useBTTFN && useFPO && (WiFi.status() == WL_CONNECTED)) {
       
         FPBUnitIsOn = false;
         tcdFPO = fpoOld = true;
@@ -508,7 +578,7 @@ void main_loop()
             ssRestartTimer();
             ssActive = false;
 
-            sidBaseLine = 0;
+            sidBaseLine = strictBaseLine = 0;
             LMState = LMIdx = id5idx = 0;
 
             ir_remote.loop();
@@ -639,8 +709,14 @@ void main_loop()
                             } else {
                                 if(TTcnt > 0) {
                                     TTcnt--;
-                                    for(int i = 0; i < 10; i++) {
-                                        sid.drawBarWithHeight(i, ttledseq[TT_SQ_LN - 1 - TTcnt][i]);
+                                    if(TTsbFlags & SBLF_STRICT) {
+                                        for(int i = 0; i < 10; i++) {
+                                            sid.drawBarWithHeight(i, ttledseqfull[TT_SQF_LN - 1 - TTcnt][i]);
+                                        }
+                                    } else {
+                                        for(int i = 0; i < 10; i++) {
+                                            sid.drawBarWithHeight(i, ttledseq[TT_SQ_LN - 1 - TTcnt][i]);
+                                        }
                                     }
                                     sid.show();
                                 }
@@ -666,7 +742,7 @@ void main_loop()
 
                     if(TTstart == TTfUpdNow) {
                         // If we have skipped P0, set last step of sequence at least
-                        // Do this also in sa mode
+                        // Do this also in sa mode and if strict (pattern is same)
                         for(int i = 0; i < 10; i++) {
                             sid.drawBarWithHeight(i, ttledseq[TT_SQ_LN - 1][i]);
                         }
@@ -682,6 +758,7 @@ void main_loop()
                     TTP0 = false;
                     TTP1 = true;
                     sidBaseLine = 19;
+                    strictBaseLine = TT_SQF_LN - 1;
                     TTstart = TTfUpdNow = now;
                     TTFInt = 1000 + ((int)(esp_random() % 200) - 100);
 
@@ -780,8 +857,14 @@ void main_loop()
                             } else {
                                 if(TTcnt > 0) {
                                     TTcnt--;
-                                    for(int i = 0; i < 10; i++) {
-                                        sid.drawBarWithHeight(i, ttledseq[TT_SQ_LN - 1 - TTcnt][i]);
+                                    if(TTsbFlags & SBLF_STRICT) {
+                                        for(int i = 0; i < 10; i++) {
+                                            sid.drawBarWithHeight(i, ttledseqfull[TT_SQF_LN - 1 - TTcnt][i]);
+                                        }
+                                    } else {
+                                        for(int i = 0; i < 10; i++) {
+                                            sid.drawBarWithHeight(i, ttledseq[TT_SQ_LN - 1 - TTcnt][i]);
+                                        }
                                     }
                                     sid.show();
                                 }
@@ -813,6 +896,7 @@ void main_loop()
                     TTP0 = false;
                     TTP1 = true;
                     sidBaseLine = 19;
+                    strictBaseLine = TT_SQF_LN - 1;
                     TTstart = TTfUpdNow = now;
                     TTFInt = 1000 + ((int)(esp_random() % 200) - 100);
 
@@ -994,7 +1078,7 @@ static void showBaseLine(int variation, uint16_t flags)
         {  90, 90, 70, 100,  90, 110,  90,  60,  95,  80 }  // extra for TT
     };
     static const uint8_t maxTTHeight[10] = {
-        19, 19, 12, 19, 19, 19, 19,  9, 19, 16
+        19, 19, 12, 19, 19, 18, 19,  9, 19, 16
     };
 
     int bh, a = sidBaseLine, b;
@@ -1004,45 +1088,60 @@ static void showBaseLine(int variation, uint16_t flags)
           
         if(a < 0) a = 0;
         if(a > 19) a = 19;
-    
+
         b = (flags & SBLF_ISTT) ? 20 : a;
     
         if(flags & SBLF_REPEAT) {
+            // (Never set in strict mode)
             for(int i = 0; i < 10; i++) {
                 sid.drawBar(i, 0, oldIdleHeight[i]);
             }
         } else {
-            for(int i = 0; i < 10; i++) {
-                bh = a * (mods[b][i] + ((int)(esp_random() % variation)-vc)) / 100;
-                if(bh < 0) bh = 0;
-                if(bh > 19) bh = 19;
-                if((flags & SBLF_LM) && bh < 9) {
-                    bh = 9 + (int)(esp_random() % 4);
+            if(!(flags & SBLF_STRICT)) {
+                for(int i = 0; i < 10; i++) {
+                    bh = a * (mods[b][i] + ((int)(esp_random() % variation)-vc)) / 100;
+                    if(bh < 0) bh = 0;
+                    if(bh > 19) bh = 19;
+                    if((flags & SBLF_LM) && bh < 9) {
+                        bh = 9 + (int)(esp_random() % 4);
+                    }
+                    if(!(flags & SBLF_ISTT) && abs(bh - oldIdleHeight[i]) > 5) {
+                        bh = (oldIdleHeight[i] + bh) / 2;
+                    }
+                    if(flags & SBLF_ISTT) {
+                        if(bh > maxTTHeight[i] || (!(flags & SBLF_ANIM))) bh = maxTTHeight[i];
+                    }
+                    sid.drawBar(i, 0, bh);
+                    oldIdleHeight[i] = bh;
                 }
-                if(!(flags & SBLF_ISTT) && abs(bh - oldIdleHeight[i]) > 5) {
-                    bh = (oldIdleHeight[i] + bh) / 2;
+            } else {
+                for(int i = 0; i < 10; i++) {
+                    bh = ttledseqfull[strictBaseLine][i];
+                    if(flags & SBLF_ISTT) {
+                        if(bh > maxTTHeight[i] + 1 || (!(flags & SBLF_ANIM))) bh = maxTTHeight[i] + 1;
+                    }
+                    sid.drawBarWithHeight(i, bh);
+                    if(bh > 0) bh--;
+                    oldIdleHeight[i] = bh;
                 }
-                if(flags & SBLF_ISTT) {
-                    if(bh > maxTTHeight[i]) bh = maxTTHeight[i];
-                }
-                sid.drawBar(i, 0, bh);
-                oldIdleHeight[i] = bh;
             }
         }
     
         if(flags & SBLF_ISTT) {
-            if(TTClrBarInc && !(flags & SBLF_LMTT)) {
-                sid.clearBar(TTClrBar);
-                TTClrBar += TTClrBarInc;
-                if(TTClrBar >= 10) {
-                    TTClrBar = 9;
-                    TTClrBarInc = -1;
-                }
-                if(TTClrBar < 0 && TTClrBarInc < 0) {
-                    TTClrBarInc = 1;
-                    TTClrBar = 0;
-                    TTBarCnt++;
-                    if(TTBarCnt > 0) TTBri = true;
+            if(flags & SBLF_ANIM) {
+                if(TTClrBarInc && !(flags & SBLF_LMTT)) {
+                    sid.clearBar(TTClrBar);
+                    TTClrBar += TTClrBarInc;
+                    if(TTClrBar >= 10) {
+                        TTClrBar = 9;
+                        TTClrBarInc = -1;
+                    }
+                    if(TTClrBar < 0 && TTClrBarInc < 0) {
+                        TTClrBarInc = 1;
+                        TTClrBar = 0;
+                        TTBarCnt++;
+                        if(TTBarCnt > 0) TTBri = true;
+                    }
                 }
             }
             if(TTBri || (flags & SBLF_LMTT)) {
@@ -1050,7 +1149,7 @@ static void showBaseLine(int variation, uint16_t flags)
             }
             if(flags & SBLF_LMTT) {
                 if(LMTT[TTLMIdx]) {
-                    sid.drawLetterMask(LMTT[TTLMIdx], 1, 11);   // FIXME
+                    sid.drawLetterMask(LMTT[TTLMIdx], 1, 11);
                 }
             }
         } 
@@ -1061,19 +1160,47 @@ static void showBaseLine(int variation, uint16_t flags)
         sid.show();
     }
 
-    //Serial.printf("baseline %d\n", sidBaseLine);
+    #ifdef SID_DBG
+    //Serial.printf("baseline %d, strict %d\n", sidBaseLine, strictBaseLine);
+    #endif
 }
 
 static void showIdle(bool freezeBaseLine)
 {
     unsigned long now = millis();
     int oldBaseLine = sidBaseLine;
+    int oldSBaseLine = strictBaseLine;
     int variation = 20;
     uint16_t sblFlags = 0;
 
     idleDelay2 = 800 + ((int)(esp_random() % 200) - 100);
 
-    if(idleMode == 4) {
+    if(useGPSS && gpsSpeed >= 0) {
+        
+        if(now - lastChange < 500)
+            return;
+
+        usingGPSS = true;
+        
+        lastChange = now;
+
+        if(!strictMode) {
+            if(!freezeBaseLine) {
+                sidBaseLine = (gpsSpeed * 20 / 88) - 1;
+                if(sidBaseLine > 19) sidBaseLine = 19;
+                if(abs(oldBaseLine - sidBaseLine) > 3) {
+                    sidBaseLine = (sidBaseLine + oldBaseLine) / 2;
+                }
+            }
+        } else {
+            if(!freezeBaseLine) {
+                strictBaseLine = gpsSpeed * 100 / (88 * 100 / (TT_SQF_LN - 1));
+                if(strictBaseLine > TT_SQF_LN-1) strictBaseLine = TT_SQF_LN-1;
+            }
+            sblFlags |= SBLF_STRICT;
+        }
+
+    } else if(idleMode == SID_IDLE_BL) {     // "backlot mode"
 
         if(now - lastChange < idleDelay)
             return;
@@ -1088,25 +1215,8 @@ static void showIdle(bool freezeBaseLine)
         id5idx++;
         if(id5idx >= ID5_STEPS) id5idx = 0;
         
-        sidBaseLine = 0;    // ?
+        sidBaseLine = strictBaseLine = 0;
         sblFlags |= SBLF_NOBL;
-
-    } else if(useGPSS && gpsSpeed >= 0) {
-        
-        if(now - lastChange < 500)
-            return;
-
-        usingGPSS = true;
-        
-        lastChange = now;
-        
-        if(!freezeBaseLine) {
-            sidBaseLine = (gpsSpeed * 20 / 88) - 1;
-            if(sidBaseLine > 19) sidBaseLine = 19;
-            if(abs(oldBaseLine - sidBaseLine) > 3) {
-                sidBaseLine = (sidBaseLine + oldBaseLine) / 2;
-            }
-        }
 
     } else {
         
@@ -1115,52 +1225,112 @@ static void showIdle(bool freezeBaseLine)
           
         lastChange = now;
 
+        if(strictMode) {
+            if(idleMode != SID_IDLE_IDC) {
+                sblFlags |= SBLF_STRICT;
+            }
+        }
+
         switch(idleMode) {
-        case 1:     // higher peaks, tempo as 0
+        case SID_IDLE_1:     // higher peaks, tempo as 0
             idleDelay = 800 + ((int)(esp_random() % 200) - 100);
-            if(!freezeBaseLine) {
-                if(sidBaseLine > 16) {
-                    sidBaseLine -= (((esp_random() % 3)) + 1);
-                } else if(sidBaseLine > 12) {
-                    sidBaseLine -= (((esp_random() % 3)) + 1);
-                } else if(sidBaseLine < 3) {
-                    sidBaseLine += (((esp_random() % 3)) + 2);
-                } else {
-                    sidBaseLine += (((esp_random() % 5)) - 1);
+            if(!strictMode) {
+                if(!freezeBaseLine) {
+                    if(sidBaseLine > 16) {
+                        sidBaseLine -= (((esp_random() % 3)) + 1);
+                    } else if(sidBaseLine > 12) {
+                        sidBaseLine -= (((esp_random() % 3)) + 1);
+                    } else if(sidBaseLine < 3) {
+                        sidBaseLine += (((esp_random() % 3)) + 2);
+                    } else {
+                        sidBaseLine += (((esp_random() % 5)) - 1);
+                    }
+                    variation = 40;
                 }
-                variation = 40;
+            } else {
+                if(!freezeBaseLine) {
+                    if(strictBaseLine > 40) {
+                        strictBaseLine -= (((esp_random() % 5)) + 1);
+                        blWayup = false;
+                    } else if(strictBaseLine < 10) {
+                        strictBaseLine += (((esp_random() % 5)) + 2);
+                        blWayup = true;
+                    } else {
+                        strictBaseLine += (((esp_random() % 7)) - (blWayup ? 2 : 4));
+                    }
+                } else {
+                    if((esp_random() % 5) >= 2) {
+                        strictBaseLine ^= 0x01;   // toggle bit 0, nothing more
+                    }
+                }
             }
             break;
-        case 2:       // Same as 0, but faster
+        case SID_IDLE_2:       // Same as 0, but faster
             idleDelay = 300 + ((int)(esp_random() % 200) - 100);
-            if(!freezeBaseLine) {
-                if(sidBaseLine > 14) {
-                    sidBaseLine -= (((esp_random() % 3)) + 1);
-                } else if(sidBaseLine > 8) {
-                    sidBaseLine -= (((esp_random() % 5)) + 1);
-                } else if(sidBaseLine < 3) {
-                    sidBaseLine += (((esp_random() % 3)) + 2);
+            if(!strictMode) {
+                if(!freezeBaseLine) {
+                    if(sidBaseLine > 14) {
+                        sidBaseLine -= (((esp_random() % 3)) + 1);
+                    } else if(sidBaseLine > 8) {
+                        sidBaseLine -= (((esp_random() % 5)) + 1);
+                    } else if(sidBaseLine < 3) {
+                        sidBaseLine += (((esp_random() % 3)) + 2);
+                    } else {
+                        sidBaseLine += (((esp_random() % 4)) - 1);
+                    }
+                }
+            } else {
+                if(!freezeBaseLine) {
+                    if(strictBaseLine > 30) {
+                        strictBaseLine -= (((esp_random() % 3)) + 1);
+                        blWayup = false;
+                    } else if(strictBaseLine < 10) {
+                        strictBaseLine += (((esp_random() % 3)) + 2);
+                        blWayup = true;
+                    } else {
+                        strictBaseLine += (((esp_random() % 7)) - (blWayup ? 2 : 4));
+                    }
                 } else {
-                    sidBaseLine += (((esp_random() % 4)) - 1);
+                    if((esp_random() % 5) >= 2) {
+                        strictBaseLine ^= 0x01;   // toggle bit 0, nothing more
+                    }
                 }
             }
             break;
-        case 3:     // higher peaks, faster
+        case SID_IDLE_3:     // higher peaks, faster
             idleDelay = 300 + ((int)(esp_random() % 200) - 100);
-            if(!freezeBaseLine) {
-                if(sidBaseLine > 16) {
-                    sidBaseLine -= (((esp_random() % 3)) + 1);
-                } else if(sidBaseLine > 12) {
-                    sidBaseLine -= (((esp_random() % 3)) + 1);
-                } else if(sidBaseLine < 3) {
-                    sidBaseLine += (((esp_random() % 3)) + 2);
-                } else {
-                    sidBaseLine += (((esp_random() % 5)) - 1);
+            if(!strictMode) {
+                if(!freezeBaseLine) {
+                    if(sidBaseLine > 16) {
+                        sidBaseLine -= (((esp_random() % 3)) + 1);
+                    } else if(sidBaseLine > 12) {
+                        sidBaseLine -= (((esp_random() % 3)) + 1);
+                    } else if(sidBaseLine < 3) {
+                        sidBaseLine += (((esp_random() % 3)) + 2);
+                    } else {
+                        sidBaseLine += (((esp_random() % 5)) - 1);
+                    }
+                    variation = 40;
                 }
-                variation = 40;
+            } else {
+                if(!freezeBaseLine) {
+                    if(strictBaseLine > 40) {
+                        strictBaseLine -= (((esp_random() % 5)) + 1);
+                        blWayup = false;
+                    } else if(strictBaseLine < 10) {
+                        strictBaseLine += (((esp_random() % 5)) + 2);
+                        blWayup = true;
+                    } else {
+                        strictBaseLine += (((esp_random() % 7)) - (blWayup ? 2 : 4));
+                    }
+                } else {
+                    if((esp_random() % 5) >= 2) {
+                        strictBaseLine ^= 0x01;   // toggle bit 0, nothing more
+                    }
+                }
             }
             break;
-        case 5:   // with masked text & "identity crisis" tt seq
+        case SID_IDLE_IDC:   // with masked text & "identity crisis" tt seq
             idleDelay = 80;
             sblFlags |= (SBLF_LM|SBLF_SKIPSHOW);
             if(now - lastChange2 < idleDelay2) {
@@ -1182,15 +1352,33 @@ static void showIdle(bool freezeBaseLine)
             break;
         default:
             idleDelay = 800 + ((int)(esp_random() % 200) - 100);
-            if(!freezeBaseLine) {
-                if(sidBaseLine > 14) {
-                    sidBaseLine -= (((esp_random() % 3)) + 1);
-                } else if(sidBaseLine > 8) {
-                    sidBaseLine -= (((esp_random() % 5)) + 1);
-                } else if(sidBaseLine < 3) {
-                    sidBaseLine += (((esp_random() % 3)) + 2);
+            if(!strictMode) {
+                if(!freezeBaseLine) {
+                    if(sidBaseLine > 14) {
+                        sidBaseLine -= (((esp_random() % 3)) + 1);
+                    } else if(sidBaseLine > 8) {
+                        sidBaseLine -= (((esp_random() % 5)) + 1);
+                    } else if(sidBaseLine < 3) {
+                        sidBaseLine += (((esp_random() % 3)) + 2);
+                    } else {
+                        sidBaseLine += (((esp_random() % 4)) - 1);
+                    }
+                }
+            } else {
+                if(!freezeBaseLine) {
+                    if(strictBaseLine > 30) {
+                        strictBaseLine -= (((esp_random() % 3)) + 1);
+                        blWayup = false;
+                    } else if(strictBaseLine < 10) {
+                        strictBaseLine += (((esp_random() % 3)) + 2);
+                        blWayup = true;
+                    } else {
+                        strictBaseLine += (((esp_random() % 7)) - (blWayup ? 2 : 4));
+                    }
                 } else {
-                    sidBaseLine += (((esp_random() % 4)) - 1);
+                    if((esp_random() % 5) >= 2) {
+                        strictBaseLine ^= 0x01;   // toggle bit 0, nothing more
+                    }
                 }
             }
             break;
@@ -1199,8 +1387,14 @@ static void showIdle(bool freezeBaseLine)
         if(!freezeBaseLine) {
             if(usingGPSS) {
                 // Smoothen
-                if(abs(oldBaseLine - sidBaseLine) > 3) {
-                    sidBaseLine = (sidBaseLine + oldBaseLine) / 2;
+                if(!(sblFlags & SBLF_STRICT)) {
+                    if(abs(oldBaseLine - sidBaseLine) > 3) {
+                        sidBaseLine = (sidBaseLine + oldBaseLine) / 2;
+                    }
+                } else {
+                    if(abs(oldSBaseLine - strictBaseLine) > 7) {
+                        strictBaseLine = (strictBaseLine + oldSBaseLine) / 2;
+                    }
                 }
                 usingGPSS = false;
             }
@@ -1208,8 +1402,10 @@ static void showIdle(bool freezeBaseLine)
     }
 
     if(sidBaseLine < 0) sidBaseLine = 0;
-    if(sidBaseLine > 19) sidBaseLine = 19;
-
+    else if(sidBaseLine > 19) sidBaseLine = 19;
+    if(strictBaseLine < 0) strictBaseLine = 0;
+    else if(strictBaseLine > TT_SQF_LN-1) strictBaseLine = TT_SQF_LN-1;
+    
     showBaseLine(variation, sblFlags);
 
     if(sblFlags & SBLF_LM) {
@@ -1270,7 +1466,7 @@ static void timeTravel(bool TCDtriggered, uint16_t P0Dur)
     TTstart = TTfUpdNow = millis();
     TTP0 = true;   // phase 0
     TTSAStopped = false;
-    TTsbFlags = 0;
+    TTsbFlags = skipTTAnim ? 0 : SBLF_ANIM;
     TTLMIdx = 0;
     
     #ifdef SID_DBG
@@ -1280,15 +1476,26 @@ static void timeTravel(bool TCDtriggered, uint16_t P0Dur)
     if(saActive) {
         TTcnt = TT_AMP_STEPS;
     } else if(usingGPSS) {
-        TTcnt = TT_SQ_LN - seqEntry[sidBaseLine];
-    } else {
-        if(idleMode == 5) {
-            TTsbFlags |= SBLF_LMTT;
+        if(strictMode) TTsbFlags |= SBLF_STRICT;
+        if(TTsbFlags & SBLF_STRICT) {
+            TTcnt = TT_SQF_LN - strictBaseLine;
+        } else {
+            TTcnt = TT_SQ_LN - seqEntry[sidBaseLine];
         }
-        TTcnt = TT_SQ_LN - seqEntry[sidBaseLine];
+    } else {
+        if(idleMode == SID_IDLE_IDC) {
+            TTsbFlags |= SBLF_LMTT;
+        } else if(strictMode) {
+            TTsbFlags |= SBLF_STRICT;   // yes, even when idleMode == SID_IDLE_BL
+        }
+        if(TTsbFlags & SBLF_STRICT) {
+            TTcnt = TT_SQF_LN - strictBaseLine;
+        } else {
+            TTcnt = TT_SQ_LN - seqEntry[sidBaseLine];
+        }
     }
     
-    if(TCDtriggered) {    // TCD-triggered TT (GPIO or MQTT) (synced with TCD)
+    if(TCDtriggered) {    // TCD-triggered TT (GPIO, BTTFN or MQTT) (synced with TCD)
         extTT = true;
         P0duration = P0Dur;
         #ifdef SID_DBG
@@ -1301,15 +1508,27 @@ static void timeTravel(bool TCDtriggered, uint16_t P0Dur)
                 TTFDelay = 0;
             }
             TTFInt = (P0duration - TTFDelay) / (TTcnt + 1);
+            if(TTFInt > 0 && TTFInt < 65) {
+                if((TTcnt + 1) * 65 <= P0duration) {
+                    TTFInt = 65;
+                    TTFDelay = P0duration - (TTFInt * (TTcnt + 1));
+                }
+            }
         } else {
             TTFInt = 0;
             TTFDelay = 0;
         }
     } else {              // button/IR-triggered TT (stand-alone)
         extTT = false;
-        TTFDelay = 2500;   // FIME - P0DUR should be identical to FC, but our sequence is shorter...! Maybe shorten the FC?
+        TTFDelay = 2500;
         if(TTcnt > 0) {
             TTFInt = (P0_DUR - TTFDelay) / (TTcnt + 1);
+            if(TTFInt > 0 && TTFInt < 65) {
+                if((TTcnt + 1) * 65 <= P0_DUR) {
+                    TTFInt = 65;
+                    TTFDelay = P0_DUR - (TTFInt * (TTcnt + 1));
+                }
+            }
         } else {
             TTFInt = 0;
         }
@@ -1324,6 +1543,12 @@ static void play_startup()
 {
     const uint8_t q[10] = {
         27, 26, 20, 27, 20, 25, 28, 20, 25, 28
+    };
+    const uint8_t qs[10] = {
+        24, 20, 20, 28, 20, 20, 20, 20, 20, 20
+    };
+    const uint8_t q4[10] = {
+        20, 20, 20, 20, 20, 27, 27, 27, 27, 27
     };
     uint8_t w[10];
     uint8_t oldBri = sid.getBrightness();
@@ -1362,7 +1587,13 @@ static void play_startup()
     }
     
     // Shrink like idle pattern
-    memcpy(w, q, sizeof(q));
+    if(idleMode == SID_IDLE_BL) {
+        memcpy(w, q4, sizeof(w));
+    } else if(strictMode && idleMode != SID_IDLE_IDC) {
+        memcpy(w, qs, sizeof(w));
+    } else {
+        memcpy(w, q, sizeof(w));
+    }
     for(int i = 0; i < 28/2; i++) {
         for(int j = 0; j < 10; j++) {
             sid.drawBarWithHeight(j, w[j]);
@@ -1379,15 +1610,23 @@ void setIdleMode(int idleNo)
     
     idleMode = idleNo;
     if(temp != idleMode) {
-        if(idleMode == 5) {
+        if(idleMode == SID_IDLE_IDC) {
             LMState = LMIdx = 0;
-        } else if(idleMode == 4) {
+        } else if(idleMode == SID_IDLE_BL) {
             id5idx = 0;
         }
     }
     ipachanged = true;
     ipachgnow = millis();
-}    
+}
+
+static void toggleStrictMode()
+{
+    strictMode = !strictMode;
+    ipachanged = true;
+    ipachgnow = millis();
+    updateConfigPortalStrictValue();
+}
 
 /*
  * IR remote input handling
@@ -1800,7 +2039,7 @@ static bool execute(bool isIR)
         temp = atoi(inputBuffer);
         if(temp >= 10 && temp <= 19) {            // *10-*15 idle pattern
             if(!isIRLocked) {
-                if(temp <= 15) {
+                if(temp <= (10 + SID_MAX_IDLE_MODE)) {
                     setIdleMode(temp - 10);
                 } else {
                     doBadInp = true;
@@ -1840,7 +2079,12 @@ static bool execute(bool isIR)
                     snake_start();
                 }
                 break;
-            case 50:                              // *50  enable/disable "peaks" in Spectrum Analyzer
+            case 50:                              // *50  enable/disable strict mode
+                if(!TTrunning && !isIRLocked) {
+                    toggleStrictMode();
+                }
+                break;
+            case 51:                              // *51  enable/disable "peaks" in Spectrum Analyzer
                 if(!TTrunning && !isIRLocked) {
                     doPeaks = !doPeaks;
                 }
@@ -2087,6 +2331,8 @@ void copyIRarray(uint32_t *irkeys, int index)
     }
 }
 
+// TT button
+
 static void ttkeyScan()
 {
     TTKey.scan();  // scan the tt button
@@ -2134,14 +2380,13 @@ static void ssEnd()
     ssActive = false;
 }
 
+// Prepare TT: Stop games, disable s-s
 void prepareTT()
 {
     // Prepare for time travel
     ssEnd();
     siddly_stop();
     snake_stop();
-    // ...?
-    // TODO FIXME
 }
 
 // Wakeup: Sent by TCD upon entering dest date,

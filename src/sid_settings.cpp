@@ -309,11 +309,14 @@ static bool read_settings(File configFile)
             strncpy(settings.tcdIP, json["tcdIP"], sizeof(settings.tcdIP) - 1);
         } else wd = true;
 
-        //wd |= CopyCheckValidNumParm(json["wait4TCD"], settings.wait4TCD, sizeof(settings.wait4TCD), 0, 1, DEF_WAIT_FOR_TCD);
         wd |= CopyCheckValidNumParm(json["useGPSS"], settings.useGPSS, sizeof(settings.useGPSS), 0, 1, DEF_USE_GPSS);
         wd |= CopyCheckValidNumParm(json["useNM"], settings.useNM, sizeof(settings.useNM), 0, 1, DEF_USE_NM);
         wd |= CopyCheckValidNumParm(json["useFPO"], settings.useFPO, sizeof(settings.useFPO), 0, 1, DEF_USE_FPO);
-        //wd |= CopyCheckValidNumParm(json["wait4FPOn"], settings.wait4FPOn, sizeof(settings.wait4FPOn), 0, 1, DEF_WAIT_FPO);
+
+        // strictMode is overruled by loadIdlePat later (if present)
+        wd |= CopyCheckValidNumParm(json["strictMode"], settings.strictMode, sizeof(settings.strictMode), 0, 1, DEF_STRICT);
+        strictMode = (settings.strictMode[0] == '1');
+        wd |= CopyCheckValidNumParm(json["skipTTAnim"], settings.skipTTAnim, sizeof(settings.skipTTAnim), 0, 1, DEF_SKIP_TTANIM);
 
         #ifdef SID_HAVEMQTT
         wd |= CopyCheckValidNumParm(json["useMQTT"], settings.useMQTT, sizeof(settings.useMQTT), 0, 1, 0);
@@ -369,11 +372,13 @@ void write_settings()
     json["wifiConTimeout"] = settings.wifiConTimeout;
 
     json["tcdIP"] = settings.tcdIP;
-    //json["wait4TCD"] = settings.wait4TCD;
     json["useGPSS"] = settings.useGPSS;
     json["useNM"] = settings.useNM;
     json["useFPO"] = settings.useFPO;
-    //json["wait4FPOn"] = settings.wait4FPOn;
+
+    sprintf(settings.strictMode, "%d", strictMode ? 1 : 0);
+    json["strictMode"] = settings.strictMode;
+    json["skipTTAnim"] = settings.skipTTAnim;
 
     #ifdef SID_HAVEMQTT
     json["useMQTT"] = settings.useMQTT;
@@ -627,8 +632,11 @@ bool loadIdlePat()
     if(openCfgFileRead(ipaCfgName, configFile, true)) {
         StaticJsonDocument<512> json;
         if(!deserializeJson(json, configFile)) {
-            if(!CopyCheckValidNumParm(json["pattern"], temp, sizeof(temp), 0, 4, 0)) {
+            if(!CopyCheckValidNumParm(json["pattern"], temp, sizeof(temp), 0, 0x1f, 0)) {
                 idleMode = (uint16_t)atoi(temp);
+                strictMode = (idleMode & 0x10) ? true : false;
+                idleMode &= 0x0f;
+                if(idleMode > SID_MAX_IDLE_MODE) idleMode = 0;
             }
         } 
         configFile.close();
@@ -637,6 +645,11 @@ bool loadIdlePat()
     // Do not write a default file, use pre-set value
 
     prevSavedIM = idleMode;
+    if(strictMode) prevSavedIM |= 0x10;
+
+    #ifdef SID_DBG
+    Serial.printf("%s: idleMode %d, strict %d\n", funcName, idleMode, strictMode);
+    #endif
 
     return true;
 }
@@ -645,12 +658,15 @@ void saveIdlePat(bool useCache)
 {
     const char *funcName = "saveIdlePat";
     char buf[6];
+    uint16_t tempIM = idleMode;
     File configFile;
     StaticJsonDocument<512> json;
 
-    if(useCache && (prevSavedIM == idleMode)) {
+    if(strictMode) tempIM |= 0x10;
+
+    if(useCache && (prevSavedIM == tempIM)) {
         #ifdef SID_DBG
-        Serial.printf("%s: Prev. saved IM identical, not writing\n", funcName);
+        Serial.printf("%s: Prev. saved idle pattern identical, not writing\n", funcName);
         #endif
         return;
     }
@@ -660,7 +676,7 @@ void saveIdlePat(bool useCache)
         return;
     }
 
-    sprintf(buf, "%d", idleMode);
+    sprintf(buf, "%d", tempIM);
     json["pattern"] = (char *)buf;
 
     #ifdef SID_DBG
@@ -671,7 +687,7 @@ void saveIdlePat(bool useCache)
     if(openCfgFileWrite(ipaCfgName, configFile, true)) {
         serializeJson(json, configFile);
         configFile.close();
-        prevSavedIM = idleMode;
+        prevSavedIM = tempIM;
     } else {
         Serial.printf("%s: %s\n", funcName, failFileWrite);
     }

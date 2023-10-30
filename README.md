@@ -4,13 +4,15 @@ This repository holds the most current firmware for CircuitSetup's magnificent [
 
 The hardware is available [here](https://circuitsetup.us).
 
+![mysid](https://github.com/realA10001986/SID/assets/76924199/050caba4-a881-44bd-9a9b-5db3da578328)
+
 Features include
 - various idle patterns
 - [Time Travel](#time-travel) function, triggered by button, [Time Circuits Display](https://tcd.backtothefutu.re) or via [MQTT](#home-assistant--mqtt)
-- Spectrum Analyzer mode via microphone
 - [IR remote controlled](#ir-remote-control); can learn keys from custom remote
+- Spectrum Analyzer mode via microphone
 - Advanced network-accessible [Config Portal](#the-config-portal) for setup with mDNS support for easy access (http://sid.local, hostname configurable)
-- Wireless communication with Time Circuits Display ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, alarm, chase speed, night mode, fake power and remote control through TCD keypad
+- Wireless communication with Time Circuits Display ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, GPS-speed adapted patterns, alarm, night mode, fake power and remote control through TCD keypad
 - [Home Assistant](#home-assistant--mqtt) (MQTT 3.1.1) support
 - [*Siddly*](#siddly) and [*Snake*](#snake) games
 - [SD card](#sd-card) support
@@ -65,11 +67,13 @@ A full reference of the Config Portal is [here](#appendix-a-the-config-portal).
 
 ## Basic Operation
 
-By default, it idles and shows an idle pattern. There are alternative idle patterns, selected by *0OK through *4OK on the remote, or via MQTT. If set through the IR remote and if an SD card is inserted, the setting will be persistent accross reboots.
+When the SID is idle, it shows an idle pattern. There are alternative idle patterns to choose from, selected by *10OK through *15OK on the remote, or via MQTT. If an SD card is inserted, the setting will be persistent accross reboots.
 
-For the options to trigger a time travel, see [here](#time-travel).
+If the option **_Adhere strictly to movie patterns_** is set (which is the default), the idle patterns #0 through #3 will only use patterns extracted from the movies (plus some interpolations); the same goes for when [GPS speed](#bttf-network-bttfn) is used. If this option is unset, random variations are shown, which is less boring, but also less accurate.
 
-The main control device is the supplied IR remote control.  If a TCD is connected through [BTTF-Network](#bttf-network-bttfn), the SID can also be controlled through the TCD's keypad.
+For ways to trigger a time travel, see [here](#time-travel).
+
+The main control device is the supplied IR remote control. If a TCD is connected through [BTTF-Network](#bttf-network-bttfn), the SID can also be controlled through the TCD's keypad.
 
 ### IR remote control
 
@@ -176,7 +180,7 @@ In order to only disable the supplied IR remote control, check the option **_Dis
      <td align="left">*15&#9166;</td><td>6015</td>
     </tr>
     <tr>
-     <td align="left">Idle mode</td>
+     <td align="left">Switch to idle mode</td>
      <td align="left">*20&#9166;</td><td>6020</td>
     </tr>
     <tr>
@@ -192,8 +196,12 @@ In order to only disable the supplied IR remote control, check the option **_Dis
      <td align="left">*23&#9166;</td><td>6023</td>
     </tr>
     <tr>
-     <td align="left">Enable/disable peaks in Spectrum Analyzer</td>
+     <td align="left">Enable/disable "<a href="#-adhere-strictly-to-movie-patterns">strictly movie patterns</a>"</td>
      <td align="left">*50&#9166;</td><td>6050</td>
+    </tr>
+   <tr>
+     <td align="left">Enable/disable peaks in Spectrum Analyzer</td>
+     <td align="left">*51&#9166;</td><td>6051</td>
     </tr>
     <tr>
      <td align="left"><a href="#locking-ir-control">Disable/Enable</a> IR remote commands</td>
@@ -229,9 +237,9 @@ Other ways of triggering a time travel are available if a [Time Circuits Display
 
 ## Spectrum Analyzer
 
-The spectrum analyzer (or rather: frequency-separated vu meter) works through a built-in microphone. This microphone is located behind the right hand center hole of the enclosure.
+The spectrum analyzer (or rather: frequency-separated vu meter) works through a built-in microphone. This microphone is located behind the right hand side center hole of the enclosure.
 
-Sticky peaks are optional, they can be switched on/off in the Config Portal and by typing *50 followed by OK on the remote.
+Sticky peaks are optional, they can be switched on/off in the Config Portal and by typing *51 followed by OK on the remote.
 
 ## Games
 
@@ -304,9 +312,9 @@ The SID supports the MQTT protocol version 3.1.1 for the following features:
 
 The SID can - to a some extent - be controlled through messages sent to topic **bttf/sid/cmd**. Support commands are
 - TIMETRAVEL: Start a [time travel](#time-travel)
-- IDLE: Select idle mode
+- IDLE: Switch to idle mode
 - SA: Start spectrum analyzer
-- IDLE_0, IDLE_1, IDLE_2, IDLE_3, IDLE_4: Select idle pattern
+- IDLE_0, IDLE_1, IDLE_2, IDLE_3, IDLE_4, IDLE_5: Select idle pattern
 
 ### Receive commands from Time Circuits Display
 
@@ -396,10 +404,6 @@ The Screen Saver, when active, disables all LEDs, until
 - the time travel button is briefly pressed (the first press when the screen saver is active will not trigger a time travel),
 - on a connected TCD, a destination date is entered (only if TCD is wirelessly connected) or a time travel event is triggered (also when wired).
 
-##### &#9654; Show peaks in Spectrum Analyzer
-
-This selects the boot-up setting for showing or not showing the peaks in the Spectrum Analyzer. Can be changed anytime by typing *50 followed by OK on the IR remote control.
-
 #### Hardware configuration settings
 
 ##### &#9654; Disable supplied IR remote control
@@ -469,6 +473,20 @@ If this option is checked, and your TCD goes into night mode, the SID will activ
 ##### &#9654; Follow TCD fake power
 
 If this option is checked, and your TCD is equipped with a fake power switch, the SID will also fake-power up/down. If fake power is off, no LED is active and the SID will ignore all input from buttons, knobs and the IR control.
+
+#### Visual options
+
+##### &#9654; Adhere strictly to movie patterns
+
+If this is set, in idle modes 0-3 as well as when using GPS speed, only patterns which were extracted from the movies (plus some interpolations) are shown. If this option is unset, random variations will be shown, which is less accurate, but also less monotonous. Purists will want this option to be set, which is also the default. This option can also be changed by typing *50 followed by OK on the IR remote control.
+
+##### &#9654; Skip time tunnel animation
+
+When set, the time travel sequence will not be animated (no flicker, no "moving bar"). Purists will want this option to be set; the default is unset.
+
+##### &#9654; Show peaks in Spectrum Analyzer
+
+This selects the boot-up setting for showing or not showing the peaks in the Spectrum Analyzer. Can be changed anytime by typing *51 followed by OK on the IR remote control.
 
 #### Home Assistant / MQTT settings
 

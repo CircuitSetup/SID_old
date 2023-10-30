@@ -38,7 +38,9 @@ extern unsigned long powerupMillis;
 
 extern sidDisplay sid;
 
+#define SID_MAX_IDLE_MODE 5
 extern uint16_t idleMode;
+extern bool     strictMode;
 
 // Number of IR keys
 #define NUM_IR_KEYS 17
