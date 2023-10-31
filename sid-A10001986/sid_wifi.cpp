@@ -74,7 +74,7 @@ WiFiManagerParameter custom_disDIR("dDIR", "Disable supplied IR control (0=off, 
 WiFiManagerParameter custom_disDIR("dDIR", "Disable supplied IR control", settings.disDIR, 1, "title='Check to disable the supplied IR remote control' type='checkbox' style='margin-top:5px;'", WFM_LABEL_AFTER);
 #endif // -------------------------------------------------
 
-#if defined(FC_MDNS) || defined(FC_WM_HAS_MDNS)
+#if defined(SID_MDNS) || defined(SID_WM_HAS_MDNS)
 #define HNTEXT "Hostname<br><span style='font-size:80%'>The Config Portal is accessible at http://<i>hostname</i>.local<br>(Valid characters: a-z/0-9/-)</span>"
 #else
 #define HNTEXT "Hostname<br><span style='font-size:80%'>(Valid characters: a-z/0-9/-)</span>"
@@ -97,7 +97,11 @@ WiFiManagerParameter custom_noETTOL("uEtNL", "TCD signals Time Travel without 5s
 #endif // -------------------------------------------------
 
 WiFiManagerParameter custom_bttfnHint("<div style='margin:0px 0px 10px 0px;padding:0px'>Wireless communication (BTTF-Network)</div>");
-WiFiManagerParameter custom_tcdIP("tcdIP", "IP address of TCD", settings.tcdIP, 15, "pattern='[0-9\\.]+' placeholder='Example: 192.168.4.1'");
+#ifdef BTTFN_MC
+WiFiManagerParameter custom_tcdIP("tcdIP", "IP address or hostname of TCD", settings.tcdIP, 63, "pattern='(^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$)|([A-Za-z0-9\\-]+)' placeholder='Example: 192.168.4.1'");
+#else
+WiFiManagerParameter custom_tcdIP("tcdIP", "IP address of TCD", settings.tcdIP, 63, "pattern='^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$' placeholder='Example: 192.168.4.1'");
+#endif
 #ifdef TC_NOCHECKBOXES  // --- Standard text boxes: -------
 WiFiManagerParameter custom_uGPS("uGPS", "Adapt pattern to GPS speed (0=no, 1=yes)<br><span style='font-size:80%'>GPS speed, if available from TCD, will overrule idle pattern</span>", settings.useGPSS, 1, "autocomplete='off'");
 #else // -------------------- Checkbox hack: --------------
@@ -556,6 +560,10 @@ void wifi_loop()
             mystrcpy(settings.wifiConTimeout, &custom_wifiConTimeout);
 
             strcpytrim(settings.tcdIP, custom_tcdIP.getValue());
+            if(strlen(settings.tcdIP) > 0) {
+                char *s = settings.tcdIP;
+                for ( ; *s; ++s) *s = tolower(*s);
+            }
 
             #ifdef SID_HAVEMQTT
             strcpytrim(settings.mqttServer, custom_mqttServer.getValue());
@@ -975,7 +983,7 @@ void updateConfigPortalValues()
     custom_wifiConTimeout.setValue(settings.wifiConTimeout, 2);
     custom_wifiConRetries.setValue(settings.wifiConRetries, 2);
 
-    custom_tcdIP.setValue(settings.tcdIP, 15);
+    custom_tcdIP.setValue(settings.tcdIP, 63);
 
     #ifdef SID_HAVEMQTT
     custom_mqttServer.setValue(settings.mqttServer, 79);

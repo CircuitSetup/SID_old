@@ -12,8 +12,8 @@
 #define _SID_GLOBAL_H
 
 // Version strings.
-#define SID_VERSION       "V1.02"
-#define SID_VERSION_EXTRA "OCT292023"
+#define SID_VERSION       "V1.03"
+#define SID_VERSION_EXTRA "OCT312023"
 
 //#define SID_DBG              // debug output on Serial
 
@@ -51,6 +51,9 @@
 // lead" is set on the TCD, the SID option "TCD signals without lead" must
 // be set, too.
 #define ETTO_LEAD 5000
+
+// Uncomment to include BTTFN discover support (multicast)
+#define BTTFN_MC
 
 /*************************************************************************
  ***                  esp32-arduino version detection                  ***

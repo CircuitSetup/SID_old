@@ -332,7 +332,7 @@ static const char    IRLearnKeys[] = "0123456789*#^$<>~";
 
 #define BTTFN_VERSION              1
 #define BTTF_PACKET_SIZE          48
-#define BTTF_DEFAULT_LOCAL_PORT 1338
+#define BTTF_DEFAULT_LOCAL_PORT 1338    // 1339 for multicast
 #define BTTFN_NOT_PREPARE  1
 #define BTTFN_NOT_TT       2
 #define BTTFN_NOT_REENTRY  3
@@ -361,6 +361,11 @@ static uint8_t       BTTFNfailCount = 0;
 static uint32_t      BTTFUDPID    = 0;
 static unsigned long lastBTTFNpacket = 0;
 static bool          BTTFNBootTO = false;
+static bool          haveTCDIP = false;
+static IPAddress     bttfnTcdIP;
+#ifdef BTTFN_MC
+static uint32_t      tcdHostNameHash = 0;
+#endif    
 
 static int      iCmdIdx = 0;
 static int      oCmdIdx = 0;
@@ -407,7 +412,9 @@ static void bttfn_setup();
 static void BTTFNCheckPacket();
 static bool BTTFNTriggerUpdate();
 static void BTTFNSendPacket();
-
+#ifdef BTTFN_MC
+static void BTTFNMCSendPacket();
+#endif
 
 void main_boot()
 {
@@ -516,7 +523,7 @@ void main_setup()
     #endif
 
     // Delete previous IR input, start fresh
-    ir_remote.resume();   
+    ir_remote.resume();  
 }
 
 void main_loop()
@@ -2443,19 +2450,35 @@ static void bttfn_setup()
 {
     useBTTFN = false;
 
-    if(isIp(settings.tcdIP)) {
-        sidUDP = &bttfUDP;
-        sidUDP->begin(BTTF_DEFAULT_LOCAL_PORT);
-        BTTFNfailCount = 0;
-        useBTTFN = true;
+    // string empty? Disable BTTFN.
+    if(!settings.tcdIP[0])
+        return;
+
+    haveTCDIP = isIp(settings.tcdIP);
+    
+    if(!haveTCDIP) {
+        #ifdef BTTFN_MC
+        tcdHostNameHash = 0;
+        unsigned char *s = (unsigned char *)settings.tcdIP;
+        for ( ; *s; ++s) tcdHostNameHash = 37 * tcdHostNameHash + tolower(*s);
+        #else
+        return;
+        #endif
+    } else {
+        bttfnTcdIP.fromString(settings.tcdIP);
     }
+    
+    sidUDP = &bttfUDP;
+    sidUDP->begin(BTTF_DEFAULT_LOCAL_PORT);
+    BTTFNfailCount = 0;
+    useBTTFN = true;
 }
 
 void bttfn_loop()
 {
     if(!useBTTFN)
         return;
-        
+
     BTTFNCheckPacket();
     
     if(!BTTFNPacketDue) {
@@ -2484,7 +2507,7 @@ static void BTTFNCheckPacket()
                 // the first 10 timeouts, after that
                 // the new request is only triggered
                 // in greater intervals via bttfn_loop().
-                if(BTTFNfailCount < 10) {
+                if(haveTCDIP && BTTFNfailCount < 10) {
                     BTTFNfailCount++;
                     BTTFNUpdateNow = 0;
                 }
@@ -2577,6 +2600,22 @@ static void BTTFNCheckPacket()
         // If it's our expected packet, no other is due for now
         BTTFNPacketDue = false;
 
+        #ifdef BTTFN_MC
+        if(BTTFUDPBuf[5] & 0x80) {
+            if(!haveTCDIP) {
+                bttfnTcdIP = sidUDP->remoteIP();
+                haveTCDIP = true;
+                #ifdef SID_DBG
+                Serial.printf("Discovered TCD IP %d.%d.%d.%d\n", bttfnTcdIP[0], bttfnTcdIP[1], bttfnTcdIP[2], bttfnTcdIP[3]);
+                #endif
+            } else {
+                #ifdef SID_DBG
+                Serial.println("Internal error - received unexpected DISCOVER response");
+                #endif
+            }
+        }
+        #endif
+
         if(BTTFUDPBuf[5] & 0x02) {
             gpsSpeed = (int16_t)(BTTFUDPBuf[18] | (BTTFUDPBuf[19] << 8));
         }
@@ -2632,15 +2671,33 @@ static void BTTFNSendPacket()
     BTTFUDPBuf[10+13] = BTTFN_TYPE_SID;
 
     BTTFUDPBuf[4] = BTTFN_VERSION;  // Version
-    BTTFUDPBuf[5] = 0x12;           // Request GPS speed & nm status
+    BTTFUDPBuf[5] = 0x12;           // Request GPS speed & status
+
+    #ifdef BTTFN_MC
+    if(!haveTCDIP) {
+        BTTFUDPBuf[5] |= 0x80;
+        memcpy(BTTFUDPBuf + 31, (void *)&tcdHostNameHash, 4);
+    }
+    #endif
 
     uint8_t a = 0;
     for(int i = 4; i < BTTF_PACKET_SIZE - 1; i++) {
         a += BTTFUDPBuf[i] ^ 0x55;
     }
     BTTFUDPBuf[BTTF_PACKET_SIZE - 1] = a;
-    
-    sidUDP->beginPacket(settings.tcdIP, BTTF_DEFAULT_LOCAL_PORT);
+
+    #ifdef BTTFN_MC
+    if(haveTCDIP) {
+    #endif  
+        sidUDP->beginPacket(bttfnTcdIP, BTTF_DEFAULT_LOCAL_PORT);
+    #ifdef BTTFN_MC    
+    } else {
+        #ifdef SID_DBG
+        Serial.printf("Sending multicast (hostname hash %x)\n", tcdHostNameHash);
+        #endif
+        sidUDP->beginPacket("224.0.0.224", BTTF_DEFAULT_LOCAL_PORT + 1);
+    }
+    #endif
     sidUDP->write(BTTFUDPBuf, BTTF_PACKET_SIZE);
     sidUDP->endPacket();
 }

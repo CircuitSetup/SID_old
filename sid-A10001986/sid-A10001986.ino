@@ -78,6 +78,10 @@
 
 /*  Changelog
  *  
+ *  2023/10/31 (A10001986)
+ *    - BTTFN: User can now enter TCD's hostname instead of IP address. If hostname
+ *      is given, TCD must be on same local network. Uses multicast, not DNS.
+ *    - Change default for "skip tt anim" - default is now movie-like.
  *  2023/10/29 (A10001986)
  *    - Add "Adhere strictly to movie patterns" option, which is ON by default.
  *      If set, only parts of the movie-extracted time travel sequence (with
