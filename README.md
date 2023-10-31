@@ -293,7 +293,7 @@ The TCD can communicate with the SID wirelessly, via WiFi. It can send out infor
 
 ![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/60ddeb60-a998-4ad8-8b1c-5a715f850109)
 
-In order to connect your SID to the TCD using BTTFN, just enter the TCD's IP address in the **_IP address of TCD_** field in the SID's Config Portal. On the TCD, no special configuration is required.
+In order to connect your SID to the TCD using BTTFN, just enter the TCD's IP address or hostname in the **_IP address or hostname of TCD_** field in the SID's Config Portal. On the TCD, no special configuration is required. Note that you need TCD firmware 2.9.99 or later for using a hostname; previous versions only work with an IP address.
 
 Afterwards, the SID and the TCD can communicate wirelessly and 
 - play time travel sequences in sync,
@@ -456,9 +456,9 @@ Usually, the TCD signals a time travel with a 5 seconds lead, in order to give a
 
 If your SID is connected wirelessly, this option has no effect.
 
-##### &#9654; IP address of TCD
+##### &#9654; IP address or hostname of TCD
 
-If you want to have your SID to communicate with a Time Circuits Display wirelessly ("BTTF-Network"), enter the IP address of the TCD here. Do NOT enter a host name here.
+If you want to have your SID to communicate with a Time Circuits Display wirelessly ("BTTF-Network"), enter the IP address of the TCD here. Do NOT enter a host name here. If your TCD is running firmware version 2.9.99 or later, you can also enter the TCD's hostname here instead (eg. 'timecircuits').
 
 If you connect your SID to the TCD's access point ("TCD-AP"), the TCD's IP address is 192.168.4.1.
 
