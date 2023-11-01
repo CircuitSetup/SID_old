@@ -55,13 +55,13 @@ extern uint8_t musFolderNum;
 #define DEF_TCD_PRES        0     // 0: No TCD connected, 1: connected via GPIO
 #define DEF_NO_ETTO_LEAD    0     // Default: 0: TCD signals TT with ETTO_LEAD lead time; 1 without
 
-#define DEF_TCD_IP          ""    // TCD ip address for networked polling
+#define DEF_TCD_IP          ""    // TCD ip address or hostname for BTTFN
 #define DEF_USE_GPSS        0     // 0: Ignore GPS speed; 1: Use it for chase speed
 #define DEF_USE_NM          0     // 0: Ignore TCD night mode; 1: Follow TCD night mode
 #define DEF_USE_FPO         0     // 0: Ignore TCD fake power; 1: Follow TCD fake power
 
 #define DEF_STRICT          1     // 0: Allow random diviations from movie patterns; 1: no not
-#define DEF_SKIP_TTANIM     0     // 0: Don't skip tt anim; 1: do
+#define DEF_SKIP_TTANIM     1     // 0: Don't skip tt anim; 1: do
 
 #define DEF_CFG_ON_SD       1     // Default: Save vol/spd/IR settings on SD card
 #define DEF_SD_FREQ         0     // SD/SPI frequency: Default 16MHz
@@ -81,7 +81,7 @@ struct Settings {
     char TCDpresent[4]      = MS(DEF_TCD_PRES);
     char noETTOLead[4]      = MS(DEF_NO_ETTO_LEAD);
 
-    char tcdIP[32]          = DEF_TCD_IP;
+    char tcdIP[64]          = DEF_TCD_IP;
     char useGPSS[4]         = MS(DEF_USE_GPSS);
     char useNM[4]           = MS(DEF_USE_NM);
     char useFPO[4]          = MS(DEF_USE_FPO);
