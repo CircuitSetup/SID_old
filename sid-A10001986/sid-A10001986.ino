@@ -65,6 +65,8 @@
  *   and install the following libraries:
  *   - WifiManager (tablatronix, tzapu) https://github.com/tzapu/WiFiManager
  *     (Tested with 2.0.13beta, 2.0.15-rc1, 2.0.16-rc2)
+ *     In order to avoid a delay when powering up several BTTFN-connected props,
+ *     change _preloadwifiscan to false in WiFiManager.h before compiling.
  *   - ArduinoJSON >= 6.19: https://arduinojson.org/v6/doc/installation/
  *
  * - Download the complete firmware source code:
@@ -78,6 +80,13 @@
 
 /*  Changelog
  *  
+ *  2023/11/02 (A10001986)
+ *    - Start CP earlier to reduce network traffic delay caused by that darn WiFi 
+ *      scan upon CP start.
+ *    * WiFiManager: Disable pre-scanning of WiFi networks when starting the CP.
+ *      Scanning is now only done when accessing the "Configure WiFi" page.
+ *      To do that in your own installation, set _preloadwifiscan to false
+ *      in WiFiManager.h
  *  2023/10/31 (A10001986)
  *    - BTTFN: User can now enter TCD's hostname instead of IP address. If hostname
  *      is given, TCD must be on same local network. Uses multicast, not DNS.
@@ -241,6 +250,7 @@ void setup()
     settings_setup();
     wifi_setup();
     main_setup();
+    bttfn_loop();
 }
 
 void loop()

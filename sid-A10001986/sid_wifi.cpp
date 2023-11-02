@@ -444,6 +444,12 @@ void wifi_setup2()
     }
 #endif
 
+    // Start the Config Portal. A WiFiScan does not
+    // disturb anything at this point hopefully.
+    if(WiFi.status() == WL_CONNECTED) {
+        wifiStartCP();
+    }
+
     wifiSetupDone = true;
 }
 
