@@ -412,9 +412,6 @@ static void bttfn_setup();
 static void BTTFNCheckPacket();
 static bool BTTFNTriggerUpdate();
 static void BTTFNSendPacket();
-#ifdef BTTFN_MC
-static void BTTFNMCSendPacket();
-#endif
 
 void main_boot()
 {
@@ -445,11 +442,7 @@ void main_setup()
     if((atoi(settings.disDIR) > 0)) 
         maxIRctrls--;
     
-    // Start the Config Portal. A WiFiScan does not
-    // disturb anything at this point.
-    if(WiFi.status() == WL_CONNECTED) {
-        wifiStartCP();
-    }
+    // [formerly started CP here]
 
     // Determine if Time Circuits Display is connected
     // via wire, and is source of GPIO tt trigger
@@ -485,6 +478,7 @@ void main_setup()
 
     // Initialize BTTF network
     bttfn_setup();
+    bttfn_loop();
 
     // Other inits
     idleDelay2 = 800 + ((int)(esp_random() % 200) - 100);
