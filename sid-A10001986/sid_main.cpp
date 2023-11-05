@@ -2134,6 +2134,7 @@ static bool execute(bool isIR)
             if(!strcmp(inputBuffer, "64738")) {
                 allOff();
                 endIRfeedback();
+                unmount_fs();
                 delay(50);
                 esp_restart();
             }
