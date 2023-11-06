@@ -12,10 +12,10 @@
 #define _SID_GLOBAL_H
 
 // Version strings.
-#define SID_VERSION       "V1.04"
-#define SID_VERSION_EXTRA "NOV022023"
+#define SID_VERSION       "V1.05"
+#define SID_VERSION_EXTRA "NOV052023"
 
-//#define SID_DBG              // debug output on Serial
+#define SID_DBG              // debug output on Serial
 
 /*************************************************************************
  ***                     mDNS (Bonjour) support                        ***
@@ -26,6 +26,9 @@
 // <hostname> is configurable in the Config Portal
 // This needs to be commented if WiFiManager provides mDNS
 #define SID_MDNS
+
+// Uncomment when using WiFiManager 2.0.17 or later
+//#define WIFIMANAGER_2_0_17
 
 // Uncomment this if WiFiManager has mDNS enabled
 //#define SID_WM_HAS_MDNS          

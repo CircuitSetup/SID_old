@@ -33,7 +33,6 @@
 #include "sid_global.h"
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
 
 #ifdef SID_MDNS
 #include <ESPmDNS.h>
@@ -285,6 +284,11 @@ void wifi_setup()
 
     wm.setCleanConnect(true);
     //wm.setRemoveDuplicateAPs(false);
+
+    #ifdef WIFIMANAGER_2_0_17
+    wm._preloadwifiscan = false;
+    wm._asyncScan = true;
+    #endif
 
     wm.setMenu(wifiMenu, TC_MENUSIZE);
 
@@ -553,7 +557,7 @@ void wifi_loop()
                 strcpy(settings.hostName, DEF_HOSTNAME);
             } else {
                 char *s = settings.hostName;
-                for ( ; *s; ++s) *s = tolower(*s);
+                for( ; *s; ++s) *s = tolower(*s);
             }
             strcpytrim(settings.systemID, custom_sysID.getValue(), true);
             strcpytrim(settings.appw, custom_appw.getValue(), true);
@@ -568,7 +572,7 @@ void wifi_loop()
             strcpytrim(settings.tcdIP, custom_tcdIP.getValue());
             if(strlen(settings.tcdIP) > 0) {
                 char *s = settings.tcdIP;
-                for ( ; *s; ++s) *s = tolower(*s);
+                for( ; *s; ++s) *s = tolower(*s);
             }
 
             #ifdef SID_HAVEMQTT
@@ -617,7 +621,7 @@ void wifi_loop()
             #ifdef SID_HAVEMQTT
             strcpyCB(settings.useMQTT, &custom_useMQTT);
             #endif
-            
+
             oldCfgOnSD = settings.CfgOnSD[0];
             strcpyCB(settings.CfgOnSD, &custom_CfgOnSD);
             //strcpyCB(settings.sdFreq, &custom_sdFrq);
@@ -644,11 +648,15 @@ void wifi_loop()
 
         allOff();
 
+        unmount_fs();
+
         #ifdef SID_DBG
         Serial.println(F("Config Portal: Restarting ESP...."));
         #endif
 
         Serial.flush();
+
+        delay(1000);
 
         esp_restart();
     }
@@ -1191,12 +1199,11 @@ static void setCBVal(WiFiManagerParameter *el, char *sv)
 static void strcpyutf8(char *dst, const char *src, unsigned int len)
 {
     strncpy(dst, src, len - 1);
-    dst[len] = 0;
+    dst[len - 1] = 0;
 }
 
 static void mqttLooper()
 {
-    
 }
 
 static void mqttCallback(char *topic, byte *payload, unsigned int length)

@@ -110,6 +110,9 @@ extern struct Settings settings;
 extern struct IPSettings ipsettings;
 
 void settings_setup();
+
+void unmount_fs();
+
 void write_settings();
 bool checkConfigExists();
 
