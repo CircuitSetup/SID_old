@@ -67,7 +67,7 @@ A full reference of the Config Portal is [here](#appendix-a-the-config-portal).
 
 ## Basic Operation
 
-When the SID is idle, it shows an idle pattern. There are alternative idle patterns to choose from, selected by *10OK through *15OK on the remote, or via MQTT. If an SD card is inserted, the setting will be persistent accross reboots.
+When the SID is idle, it shows an idle pattern. There are alternative idle patterns to choose from, selected by *10OK through *14OK on the remote, or via MQTT. If an SD card is inserted, the setting will be persistent accross reboots.
 
 If the option **_Adhere strictly to movie patterns_** is set (which is the default), the idle patterns #0 through #3 will only use patterns extracted from the movies (plus some interpolations); the same goes for when [GPS speed](#bttf-network-bttfn) is used. If this option is unset, random variations are shown, which is less boring, but also less accurate.
 
@@ -174,10 +174,6 @@ In order to only disable the supplied IR remote control, check the option **_Dis
      <tr>
      <td align="left">Idle pattern 4</td>
      <td align="left">*14&#9166;</td><td>6014</td>
-    </tr>
-   <tr>
-     <td align="left">Idle pattern 5</td>
-     <td align="left">*15&#9166;</td><td>6015</td>
     </tr>
     <tr>
      <td align="left">Switch to idle mode</td>
@@ -314,7 +310,7 @@ The SID can - to a some extent - be controlled through messages sent to topic **
 - TIMETRAVEL: Start a [time travel](#time-travel)
 - IDLE: Switch to idle mode
 - SA: Start spectrum analyzer
-- IDLE_0, IDLE_1, IDLE_2, IDLE_3, IDLE_4, IDLE_5: Select idle pattern
+- IDLE_0, IDLE_1, IDLE_2, IDLE_3, IDLE_4: Select idle pattern
 
 ### Receive commands from Time Circuits Display
 
@@ -458,7 +454,7 @@ If your SID is connected wirelessly, this option has no effect.
 
 ##### &#9654; IP address or hostname of TCD
 
-If you want to have your SID to communicate with a Time Circuits Display wirelessly ("BTTF-Network"), enter the IP address of the TCD here. Do NOT enter a host name here. If your TCD is running firmware version 2.9.99 or later, you can also enter the TCD's hostname here instead (eg. 'timecircuits').
+If you want to have your SID to communicate with a Time Circuits Display wirelessly ("BTTF-Network"), enter the IP address of the TCD here. Do NOT enter a host name here. If your TCD is running firmware version 2.9.1 or later, you can also enter the TCD's hostname here instead (eg. 'timecircuits').
 
 If you connect your SID to the TCD's access point ("TCD-AP"), the TCD's IP address is 192.168.4.1.
 
