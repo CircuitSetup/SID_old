@@ -293,7 +293,7 @@ The TCD can communicate with the SID wirelessly, via WiFi. It can send out infor
 
 ![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/60ddeb60-a998-4ad8-8b1c-5a715f850109)
 
-In order to connect your SID to the TCD using BTTFN, just enter the TCD's IP address or hostname in the **_IP address or hostname of TCD_** field in the SID's Config Portal. On the TCD, no special configuration is required. Note that you need TCD firmware 2.9.99 or later for using a hostname; previous versions only work with an IP address.
+In order to connect your SID to the TCD using BTTFN, just enter the TCD's IP address or hostname in the **_IP address or hostname of TCD_** field in the SID's Config Portal. On the TCD, no special configuration is required. Note that you need TCD firmware 2.9.1 or later for using a hostname; previous versions only work with an IP address.
 
 Afterwards, the SID and the TCD can communicate wirelessly and 
 - play time travel sequences in sync,
