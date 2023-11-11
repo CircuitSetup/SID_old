@@ -9,8 +9,8 @@ The hardware is available [here](https://circuitsetup.us/product/delorean-time-m
 Features include
 - various idle patterns
 - [Time Travel](#time-travel) function, triggered by button, [Time Circuits Display](https://tcd.backtothefutu.re) or via [MQTT](#home-assistant--mqtt)
-- [IR remote controlled](#ir-remote-control); can learn keys from custom remote
-- Spectrum Analyzer mode via microphone
+- [IR remote controlled](#ir-remote-control); can learn keys from third-party remote
+- Spectrum Analyzer mode via built-in microphone
 - Advanced network-accessible [Config Portal](#the-config-portal) for setup with mDNS support for easy access (http://sid.local, hostname configurable)
 - Wireless communication with [Time Circuits Display](https://tcd.backtothefutu.re) ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, GPS-speed adapted patterns, alarm, night mode, fake power and remote control through TCD keypad
 - [Home Assistant](#home-assistant--mqtt) (MQTT 3.1.1) support
