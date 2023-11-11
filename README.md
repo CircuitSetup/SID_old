@@ -1,18 +1,18 @@
 # Firmware for Status Indicator Display (SID)
 
-This repository holds the most current firmware for CircuitSetup's magnificent [SID](https://circuitsetup.us). The SID, also known as "Field Containment System Display", is an important part of Doc Brown's time machine in the "Back to the Future" movies.
+This repository holds the most current firmware for CircuitSetup's magnificent [SID](https://circuitsetup.us/product/delorean-time-machine-status-indicator-display-sid/). The SID, also known as "Field Containment System Display", is an important part of Doc Brown's time machine in the "Back to the Future" movies.
 
-The hardware is available [here](https://circuitsetup.us).
+The hardware is available [here](https://circuitsetup.us/product/delorean-time-machine-status-indicator-display-sid/).
 
-![mysid](https://github.com/realA10001986/SID/assets/76924199/050caba4-a881-44bd-9a9b-5db3da578328)
+![mysid](https://github.com/realA10001986/SID/assets/76924199/cdd8f609-1248-41f2-92cc-0489fe0397bf)
 
 Features include
 - various idle patterns
 - [Time Travel](#time-travel) function, triggered by button, [Time Circuits Display](https://tcd.backtothefutu.re) or via [MQTT](#home-assistant--mqtt)
-- [IR remote controlled](#ir-remote-control); can learn keys from custom remote
-- Spectrum Analyzer mode via microphone
+- [IR remote controlled](#ir-remote-control); can learn keys from third-party remote
+- Spectrum Analyzer mode via built-in microphone
 - Advanced network-accessible [Config Portal](#the-config-portal) for setup with mDNS support for easy access (http://sid.local, hostname configurable)
-- Wireless communication with Time Circuits Display ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, GPS-speed adapted patterns, alarm, night mode, fake power and remote control through TCD keypad
+- Wireless communication with [Time Circuits Display](https://tcd.backtothefutu.re) ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, GPS-speed adapted patterns, alarm, night mode, fake power and remote control through TCD keypad
 - [Home Assistant](#home-assistant--mqtt) (MQTT 3.1.1) support
 - [*Siddly*](#siddly) and [*Snake*](#snake) games
 - [SD card](#sd-card) support
@@ -59,7 +59,7 @@ If that fails, the way to enter the Config Portal depends on whether the device 
 
 In the main menu, click on "Setup" to configure your SID.
 
-| ![The Config Portal](https://github.com/realA10001986/SID/assets/76924199/e620a93d-ac54-4d4b-9925-cd526ca9d540) |
+| ![The Config Portal](https://github.com/realA10001986/SID/assets/76924199/8c60dc7a-9d3c-4b65-be3a-411640874c48) |
 |:--:| 
 | *The Config Portal's Setup page* |
 
@@ -67,7 +67,7 @@ A full reference of the Config Portal is [here](#appendix-a-the-config-portal).
 
 ## Basic Operation
 
-When the SID is idle, it shows an idle pattern. There are alternative idle patterns to choose from, selected by *10OK through *15OK on the remote, or via MQTT. If an SD card is inserted, the setting will be persistent accross reboots.
+When the SID is idle, it shows an idle pattern. There are alternative idle patterns to choose from, selected by *10OK through *14OK on the remote, or via MQTT. If an SD card is inserted, the setting will be persistent accross reboots.
 
 If the option **_Adhere strictly to movie patterns_** is set (which is the default), the idle patterns #0 through #3 will only use patterns extracted from the movies (plus some interpolations); the same goes for when [GPS speed](#bttf-network-bttfn) is used. If this option is unset, random variations are shown, which is less boring, but also less accurate.
 
@@ -79,7 +79,7 @@ The main control device is the supplied IR remote control. If a TCD is connected
 
 Your SID has an IR remote control included. This remote works out-of-the-box and needs no setup. 
 
-| ![Supplied IR remote control](https://github.com/realA10001986/SID/assets/76924199/9637b95b-d3ef-4a12-b72c-215f027e9514) |
+| ![Supplied IR remote control](https://github.com/realA10001986/SID/assets/76924199/2a3bfd40-2a44-4cc0-8209-13468115ae17) |
 |:--:| 
 | *The default IR remote control* |
 
@@ -174,10 +174,6 @@ In order to only disable the supplied IR remote control, check the option **_Dis
      <tr>
      <td align="left">Idle pattern 4</td>
      <td align="left">*14&#9166;</td><td>6014</td>
-    </tr>
-   <tr>
-     <td align="left">Idle pattern 5</td>
-     <td align="left">*15&#9166;</td><td>6015</td>
     </tr>
     <tr>
      <td align="left">Switch to idle mode</td>
@@ -291,9 +287,9 @@ Note that a wired connection only allows for synchronized time travel sequences,
 
 The TCD can communicate with the SID wirelessly, via WiFi. It can send out information about a time travel and an alarm, and the SID queries the TCD for speed and some other data. Furthermore, the TCD's keypad can be used to remote-control the SID.
 
-![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/60ddeb60-a998-4ad8-8b1c-5a715f850109)
+![BTTFN connection](https://github.com/realA10001986/SID/assets/76924199/404e4dd5-ac31-4ca4-b6a1-c8084d3a82e0)
 
-In order to connect your SID to the TCD using BTTFN, just enter the TCD's IP address or hostname in the **_IP address or hostname of TCD_** field in the SID's Config Portal. On the TCD, no special configuration is required. Note that you need TCD firmware 2.9.99 or later for using a hostname; previous versions only work with an IP address.
+In order to connect your SID to the TCD using BTTFN, just enter the TCD's IP address or hostname in the **_IP address or hostname of TCD_** field in the SID's Config Portal. On the TCD, no special configuration is required. Note that you need TCD firmware 2.9.1 or later for using a hostname; previous versions only work with an IP address.
 
 Afterwards, the SID and the TCD can communicate wirelessly and 
 - play time travel sequences in sync,
@@ -314,13 +310,13 @@ The SID can - to a some extent - be controlled through messages sent to topic **
 - TIMETRAVEL: Start a [time travel](#time-travel)
 - IDLE: Switch to idle mode
 - SA: Start spectrum analyzer
-- IDLE_0, IDLE_1, IDLE_2, IDLE_3, IDLE_4, IDLE_5: Select idle pattern
+- IDLE_0, IDLE_1, IDLE_2, IDLE_3, IDLE_4: Select idle pattern
 
 ### Receive commands from Time Circuits Display
 
 If both TCD and SID are connected to the same broker, and the option **_Send event notifications_** is checked on the TCD's side, the SID will receive information on time travel and alarm and play their sequences in sync with the TCD. Unlike BTTFN, however, no other communication takes place.
 
-![MQTT connection](https://github.com/realA10001986/SID/assets/76924199/f2838deb-c673-4bfb-9e09-88e26691742f)
+![MQTT connection](https://github.com/realA10001986/SID/assets/76924199/4a7f3c63-91cf-4206-af36-ab39c28dfb3e)
 
 MQTT and BTTFN can co-exist. However, the TCD only sends out time travel and alarm notifications through either MQTT or BTTFN, never both. If you have other MQTT-aware devices listening to the TCD's public topic (bttf/tcd/pub) in order to react to time travel or alarm messages, use MQTT (ie check **_Send event notifications_**). If only BTTFN-aware devices are to be used, uncheck this option to use BTTFN as it has less latency.
 
@@ -458,7 +454,7 @@ If your SID is connected wirelessly, this option has no effect.
 
 ##### &#9654; IP address or hostname of TCD
 
-If you want to have your SID to communicate with a Time Circuits Display wirelessly ("BTTF-Network"), enter the IP address of the TCD here. Do NOT enter a host name here. If your TCD is running firmware version 2.9.99 or later, you can also enter the TCD's hostname here instead (eg. 'timecircuits').
+If you want to have your SID to communicate with a Time Circuits Display wirelessly ("BTTF-Network"), enter the IP address of the TCD here. Do NOT enter a host name here. If your TCD is running firmware version 2.9.1 or later, you can also enter the TCD's hostname here instead (eg. 'timecircuits').
 
 If you connect your SID to the TCD's access point ("TCD-AP"), the TCD's IP address is 192.168.4.1.
 
