@@ -1,6 +1,6 @@
 # Firmware for Status Indicator Display (SID)
 
-This repository holds the most current firmware for CircuitSetup's magnificent [SID](https://circuitsetup.us). The SID, also known as "Field Containment System Display", is an important part of Doc Brown's time machine in the "Back to the Future" movies.
+This repository holds the most current firmware for CircuitSetup's magnificent [SID](https://circuitsetup.us/product/delorean-time-machine-status-indicator-display-sid/). The SID, also known as "Field Containment System Display", is an important part of Doc Brown's time machine in the "Back to the Future" movies.
 
 The hardware is available [here](https://circuitsetup.us/product/delorean-time-machine-status-indicator-display-sid/).
 
@@ -12,7 +12,7 @@ Features include
 - [IR remote controlled](#ir-remote-control); can learn keys from custom remote
 - Spectrum Analyzer mode via microphone
 - Advanced network-accessible [Config Portal](#the-config-portal) for setup with mDNS support for easy access (http://sid.local, hostname configurable)
-- Wireless communication with Time Circuits Display ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, GPS-speed adapted patterns, alarm, night mode, fake power and remote control through TCD keypad
+- Wireless communication with [Time Circuits Display](https://tcd.backtothefutu.re) ("[BTTF-Network](#bttf-network-bttfn)"); used for synchonized time travels, GPS-speed adapted patterns, alarm, night mode, fake power and remote control through TCD keypad
 - [Home Assistant](#home-assistant--mqtt) (MQTT 3.1.1) support
 - [*Siddly*](#siddly) and [*Snake*](#snake) games
 - [SD card](#sd-card) support
